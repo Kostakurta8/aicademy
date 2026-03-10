@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
@@ -12,7 +12,7 @@ import {
   Moon, Sun, Eye, Monitor,
   User, Palette, Database, Cpu,
   Download, Upload, Trash2, Check,
-  Loader2, Wifi, WifiOff, RefreshCw,
+  Wifi, WifiOff, RefreshCw,
   Info, GraduationCap,
 } from 'lucide-react'
 
@@ -180,6 +180,7 @@ export default function SettingsPage() {
 
             <Input
               label="Groq API Key"
+              type="password"
               value={groqApiKey}
               onChange={(e) => setGroqApiKey(e.target.value)}
               placeholder="gsk_..."

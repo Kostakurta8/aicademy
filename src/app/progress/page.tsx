@@ -1,13 +1,15 @@
 'use client'
 
 import Card from '@/components/ui/Card'
+import ClientOnly from '@/components/ui/ClientOnly'
 import { useXPStore } from '@/stores/xp-store'
+import { useProgressStore } from '@/stores/progress-store'
 import { Flame, Star, Target, Zap, TrendingUp, Compass, Clock } from 'lucide-react'
 
-// Dummy data for charts
+// Placeholder chart data — will show a visual pattern for the chart layout
 const xpHistory = Array.from({ length: 30 }).map((_, i) => ({
   day: i,
-  xp: Math.floor(Math.random() * 200) + 50
+  xp: 50 + Math.round(50 * Math.sin(i / 4) + 50 * Math.cos(i / 7))
 }))
 const maxXP = Math.max(...xpHistory.map(d => d.xp))
 
@@ -19,9 +21,41 @@ const skillLevels = [
 ]
 
 export default function AnalyticsDashboard() {
+  return (
+    <ClientOnly fallback={<div className="h-96" />}>
+      <AnalyticsContent />
+    </ClientOnly>
+  )
+}
+
+function AnalyticsContent() {
   const totalXP = useXPStore((s) => s.totalXP)
   const level = useXPStore((s) => s.level)
   const currentStreak = useXPStore((s) => s.currentStreak)
+  const totalLearningTime = useXPStore((s) => s.totalLearningTime)
+  const skillProfile = useProgressStore((s) => s.skillProfile)
+
+  const focusHours = (totalLearningTime / 60).toFixed(1)
+
+  const skillColors: Record<string, string> = {
+    'Fundamentals': 'bg-purple',
+    'Prompt Engineering': 'bg-green',
+    'Tools & APIs': 'bg-blue',
+    'Ethics & Safety': 'bg-orange',
+  }
+
+  const skillLevels = Object.entries(skillProfile).length > 0
+    ? Object.entries(skillProfile).map(([name, score]) => ({
+        name,
+        score: Math.round(score),
+        color: skillColors[name] || 'bg-accent',
+      }))
+    : [
+        { name: 'Fundamentals', score: 0, color: 'bg-purple' },
+        { name: 'Prompt Engineering', score: 0, color: 'bg-green' },
+        { name: 'Tools & APIs', score: 0, color: 'bg-blue' },
+        { name: 'Ethics & Safety', score: 0, color: 'bg-orange' },
+      ]
 
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-6">
@@ -50,7 +84,7 @@ export default function AnalyticsDashboard() {
         <Card padding="md" className="flex flex-col items-center justify-center text-center group transition-colors hover:border-accent/40">
           <Clock size={24} className="text-blue mb-2 group-hover:scale-110 transition-transform" />
           <div className="text-sm text-text-muted mb-1">Focus Time</div>
-          <div className="text-2xl font-bold text-text-primary">12.5 hrs</div>
+          <div className="text-2xl font-bold text-text-primary">{focusHours} hrs</div>
         </Card>
       </div>
 
@@ -97,7 +131,9 @@ export default function AnalyticsDashboard() {
               {Array.from({ length: 50 }).map((_, col) => (
                 <div key={col} className="flex flex-col gap-1 min-w-[12px] md:min-w-[16px]">
                   {Array.from({ length: 7 }).map((_, row) => {
-                    const activity = Math.random();
+                    // Deterministic pattern based on position — placeholder until activity tracking is implemented
+                    const seed = (col * 7 + row) * 2654435761
+                    const activity = ((seed >>> 0) % 100) / 100
                     let color = 'bg-surface-raised';
                     if (activity > 0.9) color = 'bg-green';
                     else if (activity > 0.7) color = 'bg-green/70';
