@@ -188,17 +188,16 @@ export default function ModuleDetailPage() {
         {mod.lessons.map((lesson, idx) => {
           const isDone = completedLessons.includes(lesson.slug)
           const isNext = idx === nextLessonIdx
+          const iconStyle = isDone
+            ? 'bg-green/20 text-green'
+            : isNext ? 'bg-accent/20 text-accent' : 'bg-accent/10 text-accent'
 
           return (
             <div key={lesson.slug}>
               <Link href={`/modules/${slug}/${lesson.slug}`}>
                 <Card padding="md" className={`group ${isNext ? 'ring-2 ring-accent/40' : ''}`}>
                   <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 ${
-                      isDone
-                        ? 'bg-green/20 text-green'
-                        : isNext ? 'bg-accent/20 text-accent' : 'bg-accent/10 text-accent'
-                    }`}>
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 ${iconStyle}`}>
                       {isDone ? <CheckCircle size={20} /> : idx + 1}
                     </div>
                     <div className="flex-1 min-w-0">

@@ -265,8 +265,8 @@ export default function PromptingPage() {
                                 <pre className="text-xs bg-surface-raised rounded-xl p-4 pr-10 text-text-secondary overflow-x-auto whitespace-pre-wrap font-mono border border-border-subtle leading-relaxed">{p.template}</pre>
                               </div>
                               <div className="mt-3 space-y-1">
-                                {p.tips.map((tip, i) => (
-                                  <p key={i} className="text-xs text-text-muted flex gap-2"><span className="text-accent shrink-0">💡</span> {tip}</p>
+                                {p.tips.map((tip) => (
+                                  <p key={tip} className="text-xs text-text-muted flex gap-2"><span className="text-accent shrink-0">💡</span> {tip}</p>
                                 ))}
                               </div>
                             </div>

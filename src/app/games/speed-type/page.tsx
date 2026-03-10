@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
+import { getRank } from '@/lib/get-rank'
 import { ConfettiBurst, ComboIndicator, AnimatedScore, ScreenFlash, XPPopup, StreakFire } from '@/components/ui/GameEffects'
 import { Keyboard, RotateCcw, Trophy, Zap, Star, ArrowRight } from 'lucide-react'
 import { useXPStore } from '@/stores/xp-store'
@@ -158,7 +159,7 @@ export default function SpeedTypePage() {
   if (phase === 'finished') {
     const wpm = correct
     const avgTime = completedTerms.length > 0 ? (completedTerms.reduce((s, t) => s + t.time, 0) / completedTerms.length).toFixed(1) : '—'
-    const rank = correct >= 15 ? '⚡ Typing Legend' : correct >= 10 ? '🔥 Speed Demon' : correct >= 6 ? '⌨️ Quick Fingers' : '🐢 Getting Started'
+    const rank = getRank(correct, [{ min: 15, label: '⚡ Typing Legend' }, { min: 10, label: '🔥 Speed Demon' }, { min: 6, label: '⌨️ Quick Fingers' }], '🐢 Getting Started')
     return (
       <div className="p-6 md:p-8 max-w-3xl mx-auto">
         <ConfettiBurst trigger={showConfetti} />

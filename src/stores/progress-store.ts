@@ -1,6 +1,14 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+/** Timestamped activity log for weekly challenge tracking */
+interface ActivityLog {
+  lessonsCompleted: number[]     // timestamps
+  promptsSent: number[]          // timestamps
+  flashcardsReviewed: number[]   // timestamps
+  perfectQuizzes: number[]       // timestamps
+}
+
 interface ProgressStore {
   moduleProgress: Record<string, {
     started: boolean
@@ -18,6 +26,7 @@ interface ProgressStore {
   completedChallenges: string[]
   completedWeeklyChallenges: string[]
   skillProfile: Record<string, number>
+  activityLog: ActivityLog
 
   startModule: (moduleId: string) => void
   completeLesson: (moduleId: string, lessonId: string) => void
@@ -25,6 +34,7 @@ interface ProgressStore {
   updateSkillProfile: (topic: string, score: number) => void
   completeMission: (missionId: string) => void
   completeChallenge: (challengeId: string) => void
+  logActivity: (type: keyof ActivityLog) => void
 }
 
 export const useProgressStore = create<ProgressStore>()(
@@ -36,6 +46,12 @@ export const useProgressStore = create<ProgressStore>()(
       completedChallenges: [],
       completedWeeklyChallenges: [],
       skillProfile: {},
+      activityLog: {
+        lessonsCompleted: [],
+        promptsSent: [],
+        flashcardsReviewed: [],
+        perfectQuizzes: [],
+      },
 
       startModule: (moduleId) => set((s) => ({
         moduleProgress: {
@@ -84,6 +100,18 @@ export const useProgressStore = create<ProgressStore>()(
       completeChallenge: (challengeId) => set((s) => ({
         completedChallenges: [...s.completedChallenges, challengeId],
       })),
+
+      logActivity: (type) => set((s) => {
+        // Keep only last 30 days of timestamps to prevent unbounded growth
+        const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000
+        const filtered = s.activityLog[type].filter((t) => t > cutoff)
+        return {
+          activityLog: {
+            ...s.activityLog,
+            [type]: [...filtered, Date.now()],
+          },
+        }
+      }),
     }),
     { name: 'aicademy-progress', skipHydration: true }
   )

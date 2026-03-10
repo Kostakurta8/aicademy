@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
+import { getRank } from '@/lib/get-rank'
 import { ConfettiBurst, ScreenFlash, XPPopup, TimerBar, AnimatedScore, ComboIndicator, LivesDisplay, StreakFire } from '@/components/ui/GameEffects'
 import { Ghost, RotateCcw, Trophy, Check, X, Eye, AlertTriangle, Zap, ChevronRight, ShieldCheck, Crosshair, Star, Brain } from 'lucide-react'
 import { useXPStore } from '@/stores/xp-store'
@@ -299,7 +300,7 @@ export default function HallucinationHunterPage() {
     const survived = lives > 0
     const accuracy = results.length > 0 ? Math.round((correctCount / results.length) * 100) : 0
     const totalXP = score + 75
-    const rank = accuracy >= 90 ? '🏆 Fact-Check Master' : accuracy >= 70 ? '🔍 Senior Hunter' : accuracy >= 50 ? '👁️ Sharp Eye' : '🔰 Rookie'
+    const rank = getRank(accuracy, [{ min: 90, label: '🏆 Fact-Check Master' }, { min: 70, label: '🔍 Senior Hunter' }, { min: 50, label: '👁️ Sharp Eye' }], '🔰 Rookie')
 
     return (
       <div className="p-6 md:p-8 max-w-3xl mx-auto">

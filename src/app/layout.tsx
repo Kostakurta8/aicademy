@@ -7,6 +7,7 @@ import Sidebar from '@/components/layout/Sidebar'
 import Navbar from '@/components/layout/Navbar'
 import BottomNav from '@/components/layout/BottomNav'
 import ClientOnly from '@/components/ui/ClientOnly'
+import ErrorBoundary from '@/components/ui/ErrorBoundary'
 
 // Dynamic imports — code-split overlay/modal components into separate chunks
 const ToastContainer = dynamic(() => import('@/components/notifications/ToastContainer'))
@@ -82,7 +83,9 @@ export default function RootLayout({
               role="main"
               className="min-h-screen pt-16 pb-20 md:pb-0 transition-all duration-300 ml-0 md:ml-[260px]"
             >
-              {children}
+              <ErrorBoundary level="page">
+                {children}
+              </ErrorBoundary>
             </main>
             <BottomNav />
             <GlobalXPToast />
@@ -90,7 +93,9 @@ export default function RootLayout({
             <ToastContainer />
             <CommandPalette />
             <KeyboardShortcuts />
-            <AITutor />
+            <ErrorBoundary level="ai">
+              <AITutor />
+            </ErrorBoundary>
             <OnboardingGate />
           </ThemeProvider>
         </ClientOnly>

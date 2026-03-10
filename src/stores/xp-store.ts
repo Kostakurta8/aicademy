@@ -98,7 +98,6 @@ export const useXPStore = create<XPStore>()(
           // Daily goal tracking
           const dailyXPDate = s.dailyXPDate === today ? s.dailyXPDate : today
           const dailyXPEarned = s.dailyXPDate === today ? s.dailyXPEarned + amount : amount
-          const wasCompleted = s.dailyGoalCompleted && s.dailyXPDate === today
           const dailyGoalCompleted = dailyXPEarned >= DAILY_XP_GOAL
 
           return { totalXP: newXP, level: newLevel, xpHistory, lifetimeXPByModule, dailyXPEarned, dailyXPDate, dailyGoalCompleted }

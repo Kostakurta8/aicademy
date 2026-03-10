@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
+import { getRank } from '@/lib/get-rank'
 import { ConfettiBurst, ProgressDots, ScreenFlash, XPPopup, AnimatedScore } from '@/components/ui/GameEffects'
 import { Puzzle, Star, RotateCcw, ArrowRight, Trophy, Zap, Check, X, Lightbulb } from 'lucide-react'
 import { useXPStore } from '@/stores/xp-store'
@@ -101,7 +102,7 @@ function calculateScore(blocks: PromptBlock[], level: typeof levels[0]) {
   if (trapCount === 0) { score += 20; feedback.push('✅ Avoided all token traps!') }
   else feedback.push(`❌ ${trapCount} trap(s) — wasted tokens!`)
 
-  const grade = score >= 90 ? 'S' : score >= 75 ? 'A' : score >= 60 ? 'B' : score >= 40 ? 'C' : 'D'
+  const grade = getRank(score, [{ min: 90, label: 'S' }, { min: 75, label: 'A' }, { min: 60, label: 'B' }, { min: 40, label: 'C' }], 'D')
   return { score, feedback, grade }
 }
 
@@ -189,7 +190,7 @@ export default function TokenTetrisPage() {
   if (phase === 'gameOver') {
     const avgScore = Math.round(totalScore / levels.length)
     const xpEarned = Math.round(totalScore * 1.2)
-    const rank = avgScore >= 85 ? '🏆 Token Master' : avgScore >= 70 ? '🧩 Puzzle Pro' : avgScore >= 50 ? '🔧 Builder' : '📝 Rookie'
+    const rank = getRank(avgScore, [{ min: 85, label: '🏆 Token Master' }, { min: 70, label: '🧩 Puzzle Pro' }, { min: 50, label: '🔧 Builder' }], '📝 Rookie')
     return (
       <div className="p-6 md:p-8 max-w-3xl mx-auto">
         <ConfettiBurst trigger={showConfetti} />

@@ -1,6 +1,6 @@
 # AIcademy — Codebase Audit Report
 
-**Date:** 2025-07-08 (audit 1) | 2025-07-09 (improvements) | 2025-07-13 (audit 2)
+**Date:** 2025-07-08 (audit 1) | 2025-07-09 (improvements) | 2025-07-13 (audit 2) | 2025-07-14 (audit 2 improvements)
 **Scope:** Full repository audit — 112 source files across `src/`, `public/`, and root config.
 
 ---
@@ -94,3 +94,26 @@
 | `Date.now` in `flashcards/page.tsx` | Lines 42, 222, 449 | **Correct** — React treats function passed to `useState` as a lazy initializer |
 | All files complete | prompt-chains (504 lines), prompting/[lesson] (1101 lines), compare (432 lines) | No truncated files — all properly closed |
 | `dangerouslySetInnerHTML` | Full codebase search | **None found** — zero XSS vectors via innerHTML |
+
+---
+
+## Implemented Improvements (Phase 4 — Audit 2 Improvement Plan)
+
+| # | Priority | Improvement | Status | Changes |
+|---|----------|-------------|--------|---------|
+| 1 | **High** | Persist journal entries | ✅ Done | Created `src/stores/journal-store.ts` (Zustand + localStorage). Refactored `journal/page.tsx` to use store with `ClientOnly` wrapper. Registered rehydration in `ThemeProvider`. Sample entries used as defaults. |
+| 2 | **High** | Real XP history chart | ✅ Done | Replaced placeholder sinusoidal data in `progress/page.tsx` with real `xpHistory` from `useXPStore`. Chart now shows last 30 days of actual XP earned. |
+| 3 | **High** | Real activity heatmap | ✅ Done | Replaced deterministic hash pattern with real `activityLog` timestamps from `useProgressStore`. Heatmap reflects actual lesson/prompt/flashcard/quiz activity. |
+| 4 | **Medium** | Pomodoro focus time tracking | ✅ Done | Integrated `useXPStore.addLearningTime(workMinutes)` into `switchMode()` in `pomodoro/page.tsx`. Focus time now tracked when work sessions complete. |
+| 5 | **Medium** | tsconfig `forceConsistentCasingInFileNames` | ✅ Done | Added `"forceConsistentCasingInFileNames": true` to `tsconfig.json` compiler options. |
+| 6 | **Medium** | Label association in settings | ✅ Done | Changed orphaned `<label>` elements (Avatar, Default Model) to `<span>` in `settings/page.tsx` since they label button groups, not form inputs. |
+| 7 | **Medium** | aria-label for icon-only buttons | ✅ Done | Added `aria-label` attributes to avatar buttons, model buttons, sound toggle, and theme buttons in `settings/page.tsx`. |
+| 8 | **Low** | Replace array-index keys | ✅ Done | Progress chart uses `day.date` as key. Heatmap uses `cell.date`. Prompting tips use `tip` string as key. |
+| 9 | **Low** | Extract nested ternary | ✅ Done | Extracted 3-way ternary for lesson icon styles in `modules/[slug]/page.tsx` into a named `iconStyle` variable. |
+| 10 | **Low** | Remove unused certRef | ✅ Done | Removed unused `useRef` import, `certRef` declaration, and `ref={certRef}` in `certificate/page.tsx`. |
+
+### New Files Created (Phase 4)
+
+| File | Purpose |
+|------|---------|
+| `src/stores/journal-store.ts` | Persisted Zustand store for learning journal entries |

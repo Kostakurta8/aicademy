@@ -24,20 +24,7 @@ import {
   Zap,
   Play,
 } from 'lucide-react'
-
-// Ordered learning path — this is the LINEAR sequence (consistent across app)
-const learningPath = [
-  { slug: 'foundations', title: 'AI Foundations', icon: '🧠', emoji: '🧠', totalLessons: 3, color: 'from-purple to-blue' },
-  { slug: 'prompt-engineering', title: 'Prompt Engineering', icon: '✍️', emoji: '✍️', totalLessons: 4, color: 'from-blue to-cyan' },
-  { slug: 'tools-ecosystem', title: 'AI Tools', icon: '🛠️', emoji: '🛠️', totalLessons: 3, color: 'from-cyan to-green' },
-  { slug: 'building-with-apis', title: 'Building with APIs', icon: '🔗', emoji: '🔗', totalLessons: 4, color: 'from-green to-gold' },
-  { slug: 'ethics', title: 'Ethics & Thinking', icon: '⚖️', emoji: '⚖️', totalLessons: 3, color: 'from-gold to-orange' },
-  { slug: 'real-world-projects', title: 'Real Projects', icon: '🚀', emoji: '🚀', totalLessons: 3, color: 'from-orange to-pink' },
-  { slug: 'image-video-audio', title: 'Media AI', icon: '🎨', emoji: '🎨', totalLessons: 3, color: 'from-pink to-purple' },
-  { slug: 'agents-automation', title: 'AI Agents', icon: '🤖', emoji: '🤖', totalLessons: 3, color: 'from-purple to-red' },
-]
-
-const TOTAL_LESSONS = learningPath.reduce((sum, m) => sum + m.totalLessons, 0)
+import { learningPath, TOTAL_LESSONS, quickActions } from '@/data/modules'
 
 export default function DashboardPage() {
   return (
@@ -83,13 +70,6 @@ export default function DashboardPage() {
     </div>
   )
 }
-
-const quickActions = [
-  { label: 'Learn', href: '/modules', gradient: 'from-blue to-cyan', emoji: '📚' },
-  { label: 'Play', href: '/games', gradient: 'from-green to-gold', emoji: '🎮' },
-  { label: 'Prompt', href: '/prompting', gradient: 'from-purple to-pink', emoji: '✨' },
-  { label: 'Cards', href: '/flashcards', gradient: 'from-orange to-red', emoji: '🃏' },
-]
 
 /* ═══════════════════════════════════════
    HeroRow — Greeting + Daily Goal Ring

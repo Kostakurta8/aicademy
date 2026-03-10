@@ -119,12 +119,13 @@ export default function SettingsPage() {
           <div className="space-y-4">
             <Input label="Display Name" value={userName} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
             <div>
-              <label className="text-sm font-medium text-text-secondary block mb-2">Avatar</label>
+              <span className="text-sm font-medium text-text-secondary block mb-2">Avatar</span>
               <div className="flex gap-2 flex-wrap">
                 {avatars.map((a) => (
                   <button
                     key={a}
                     onClick={() => setAvatar(a)}
+                    aria-label={`Select avatar ${a}`}
                     className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center transition-all cursor-pointer ${
                       avatar === a ? 'ring-2 ring-accent bg-accent/10 scale-110' : 'bg-surface-raised hover:bg-border-subtle/30'
                     }`}
@@ -149,6 +150,7 @@ export default function SettingsPage() {
                 <button
                   key={t.id}
                   onClick={() => setTheme(t.id)}
+                  aria-label={`Switch to ${t.label} theme`}
                   className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
                     theme === t.id ? 'border-accent bg-accent/10 ring-2 ring-accent' : 'border-border-subtle bg-surface-raised hover:border-accent/50'
                   }`}
@@ -198,12 +200,13 @@ export default function SettingsPage() {
 
             {installedModels.length > 0 && (
               <div>
-                <label className="text-sm font-medium text-text-secondary block mb-2">Default Model</label>
+                <span className="text-sm font-medium text-text-secondary block mb-2">Default Model</span>
                 <div className="flex flex-wrap gap-2">
                   {installedModels.map((m) => (
                     <button
                       key={m}
                       onClick={() => setSelectedModel(m)}
+                      aria-label={`Select model ${m}`}
                       className={`px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-colors ${
                         selectedModel === m ? 'bg-accent text-white' : 'bg-surface-raised text-text-secondary hover:bg-border-subtle/30'
                       }`}
@@ -256,6 +259,7 @@ export default function SettingsPage() {
             </div>
             <button
               onClick={() => setSoundEnabled(!soundEnabled)}
+              aria-label={soundEnabled ? 'Disable sound effects' : 'Enable sound effects'}
               className={`w-12 h-6 rounded-full transition-colors cursor-pointer relative ${soundEnabled ? 'bg-accent' : 'bg-surface-raised border border-border-subtle'}`}
             >
               <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all ${soundEnabled ? 'left-[26px]' : 'left-0.5'}`} />

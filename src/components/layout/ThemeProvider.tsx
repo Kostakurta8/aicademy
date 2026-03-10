@@ -21,10 +21,11 @@ export default function ThemeProvider({ children }: Readonly<{ children: React.R
       import('@/stores/progress-store').then(m => m.useProgressStore.persist.rehydrate())
       import('@/stores/bookmark-store').then(m => m.useBookmarkStore.persist.rehydrate())
     })
-    // Heavily deferred — flashcards & AI only when actually needed
+    // Heavily deferred — flashcards, AI, journal only when actually needed
     idleCallback(() => {
       import('@/stores/ai-store').then(m => m.useAIStore.persist.rehydrate())
       import('@/stores/flashcard-store').then(m => m.useFlashcardStore.persist.rehydrate())
+      import('@/stores/journal-store').then(m => m.useJournalStore.persist.rehydrate())
     })
 
     // Check AI health lazily — dynamic import keeps groq-client out of layout
@@ -38,9 +39,16 @@ export default function ThemeProvider({ children }: Readonly<{ children: React.R
       })
     })
 
-    // Register service worker for PWA
+    // Service worker: register in prod, unregister stale ones in dev
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {})
+      if (window.location.hostname === 'localhost') {
+        // Dev: unregister any stale SW so it doesn't intercept HMR/chunks
+        navigator.serviceWorker.getRegistrations().then((regs) =>
+          regs.forEach((r) => r.unregister())
+        )
+      } else {
+        navigator.serviceWorker.register('/sw.js').catch(() => {})
+      }
     }
   }, [])
 

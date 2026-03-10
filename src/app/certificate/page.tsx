@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
@@ -9,7 +9,6 @@ import { Award, Download, Star, Trophy } from 'lucide-react'
 export default function CertificatePage() {
   const [name, setName] = useState('')
   const [generated, setGenerated] = useState(false)
-  const certRef = useRef<HTMLDivElement>(null)
 
   const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
 
@@ -71,7 +70,7 @@ export default function CertificatePage() {
       ) : (
         <div className="animate-fade-in">
           {/* Certificate preview */}
-          <div ref={certRef} className="relative bg-gradient-to-br from-[#1a1033] via-[#0f0f2e] to-[#0a1628] rounded-2xl border-2 border-gold/30 p-8 md:p-12 mb-6 overflow-hidden">
+          <div className="relative bg-gradient-to-br from-[#1a1033] via-[#0f0f2e] to-[#0a1628] rounded-2xl border-2 border-gold/30 p-8 md:p-12 mb-6 overflow-hidden">
             {/* Decorative elements */}
             <div className="absolute top-0 left-0 w-32 h-32 bg-gold/5 rounded-full blur-3xl" />
             <div className="absolute bottom-0 right-0 w-40 h-40 bg-accent/5 rounded-full blur-3xl" />

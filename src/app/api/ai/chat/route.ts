@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { checkRateLimit } from '@/lib/rate-limit'
+import type { AIModel } from '@/types'
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 
-const ALLOWED_MODELS = new Set([
+const ALLOWED_MODELS: Set<AIModel> = new Set([
   'llama-3.1-8b-instant',
   'llama-3.3-70b-versatile',
   'gemma2-9b-it',
@@ -17,6 +19,22 @@ function getApiKey(): string | null {
 }
 
 export async function POST(req: NextRequest) {
+  // Rate limit: 30 requests per 60 seconds per IP
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'anonymous'
+  const { allowed, remaining, resetMs } = checkRateLimit(ip, 30, 60_000)
+  if (!allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please slow down.' },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(Math.ceil(resetMs / 1000)),
+          'X-RateLimit-Remaining': '0',
+        },
+      }
+    )
+  }
+
   const apiKey = getApiKey()
   if (!apiKey) {
     return NextResponse.json(
@@ -73,6 +91,7 @@ export async function POST(req: NextRequest) {
           'Content-Type': 'text/event-stream',
           'Cache-Control': 'no-cache',
           'Connection': 'keep-alive',
+          'X-RateLimit-Remaining': String(remaining),
         },
       })
     }

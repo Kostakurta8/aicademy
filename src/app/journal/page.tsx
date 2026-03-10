@@ -3,45 +3,22 @@
 import { useState } from 'react'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
+import ClientOnly from '@/components/ui/ClientOnly'
+import { useJournalStore, type JournalEntry } from '@/stores/journal-store'
 import { BookOpen, Plus, Trash2, Search } from 'lucide-react'
 
-interface JournalEntry {
-  id: string
-  date: string
-  title: string
-  content: string
-  tags: string[]
-  moduleSlug?: string
+export default function JournalPage() {
+  return (
+    <ClientOnly fallback={<div className="h-96" />}>
+      <JournalContent />
+    </ClientOnly>
+  )
 }
 
-const sampleEntries: JournalEntry[] = [
-  {
-    id: '1',
-    date: '2026-03-05',
-    title: 'Understanding Transformer Architecture',
-    content: 'Today I learned how self-attention works in transformers. The key insight is that each token creates Query, Key, and Value vectors, and the attention score determines how much each token "pays attention" to every other token. The formula Attention(Q,K,V) = softmax(QK^T/√dk)V finally makes sense!',
-    tags: ['transformers', 'attention', 'architecture'],
-    moduleSlug: 'foundations',
-  },
-  {
-    id: '2',
-    date: '2026-03-04',
-    title: 'Prompt Engineering Breakthrough',
-    content: 'Chain-of-thought prompting is incredibly powerful. By simply adding "Think step by step" to my prompts, the AI\'s math accuracy went from ~40% to ~85%. The key is to force the model to show its work before giving a final answer.',
-    tags: ['prompt-engineering', 'chain-of-thought'],
-    moduleSlug: 'prompt-engineering',
-  },
-  {
-    id: '3',
-    date: '2026-03-03',
-    title: 'RAG vs Fine-Tuning',
-    content: 'Learned the key difference: RAG adds external knowledge at inference time (good for facts that change), while fine-tuning bakes knowledge into the model itself (good for style/behavior). RAG is usually the better first choice because it\'s cheaper and more maintainable.',
-    tags: ['rag', 'fine-tuning', 'comparison'],
-  },
-]
-
-export default function JournalPage() {
-  const [entries, setEntries] = useState<JournalEntry[]>(sampleEntries)
+function JournalContent() {
+  const entries = useJournalStore((s) => s.entries)
+  const addEntry = useJournalStore((s) => s.addEntry)
+  const deleteEntry = useJournalStore((s) => s.deleteEntry)
   const [searchTerm, setSearchTerm] = useState('')
   const [isAdding, setIsAdding] = useState(false)
   const [newTitle, setNewTitle] = useState('')
@@ -58,14 +35,11 @@ export default function JournalPage() {
 
   const handleAdd = () => {
     if (!newTitle.trim() || !newContent.trim()) return
-    const entry: JournalEntry = {
-      id: `j-${Date.now()}`,
-      date: new Date().toISOString().split('T')[0],
+    addEntry({
       title: newTitle.trim(),
       content: newContent.trim(),
       tags: newTags.split(',').map((t) => t.trim()).filter(Boolean),
-    }
-    setEntries([entry, ...entries])
+    })
     setNewTitle('')
     setNewContent('')
     setNewTags('')
@@ -73,7 +47,7 @@ export default function JournalPage() {
   }
 
   const handleDelete = (id: string) => {
-    setEntries(entries.filter((e) => e.id !== id))
+    deleteEntry(id)
     if (selectedEntry?.id === id) setSelectedEntry(null)
   }
 

@@ -106,9 +106,11 @@ export default function CommandPalette() {
 
   return (
         <div className="fixed inset-0 z-[200] flex items-start justify-center pt-[15vh]">
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- backdrop dismiss is supplementary; Escape key already closes */}
           <div
             className="animate-fade-in absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setOpen(false)}
+            role="presentation"
           />
           <div
             className="animate-fade-in relative w-full max-w-lg bg-surface border border-border-subtle rounded-2xl shadow-2xl overflow-hidden z-10"

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
+import { getRank } from '@/lib/get-rank'
 import { AnimatedScore, ConfettiBurst, XPPopup, TimerBar, ScreenFlash, ProgressDots, ComboIndicator, StreakFire } from '@/components/ui/GameEffects'
 import { useXPStore } from '@/stores/xp-store'
 import { useProgressStore } from '@/stores/progress-store'
@@ -445,7 +446,7 @@ export default function PromptTranslatorPage() {
             <Trophy size={48} className="text-white" />
           </div>
           <h1 className="text-3xl font-bold text-text-primary mb-1">Translation Complete!</h1>
-          <p className="text-text-secondary">{accuracy >= 90 ? 'Flawless translation skills!' : accuracy >= 70 ? 'Great work!' : accuracy >= 50 ? 'Not bad, keep practicing!' : 'Review the lessons and try again!'}</p>
+          <p className="text-text-secondary">{getRank(accuracy, [{ min: 90, label: 'Flawless translation skills!' }, { min: 70, label: 'Great work!' }, { min: 50, label: 'Not bad, keep practicing!' }], 'Review the lessons and try again!')}</p>
         </div>
 
         <div className="grid grid-cols-3 gap-3 mb-6 max-w-md mx-auto">

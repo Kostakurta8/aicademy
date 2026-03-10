@@ -6,20 +6,6 @@ import { useXPStore } from '@/stores/xp-store'
 import { useProgressStore } from '@/stores/progress-store'
 import { Flame, Star, Target, Zap, TrendingUp, Compass, Clock } from 'lucide-react'
 
-// Placeholder chart data — will show a visual pattern for the chart layout
-const xpHistory = Array.from({ length: 30 }).map((_, i) => ({
-  day: i,
-  xp: 50 + Math.round(50 * Math.sin(i / 4) + 50 * Math.cos(i / 7))
-}))
-const maxXP = Math.max(...xpHistory.map(d => d.xp))
-
-const skillLevels = [
-  { name: 'Fundamentals', score: 85, color: 'bg-purple' },
-  { name: 'Prompt Engineering', score: 92, color: 'bg-green' },
-  { name: 'Tools & APIs', score: 60, color: 'bg-blue' },
-  { name: 'Ethics & Safety', score: 75, color: 'bg-orange' },
-]
-
 export default function AnalyticsDashboard() {
   return (
     <ClientOnly fallback={<div className="h-96" />}>
@@ -33,9 +19,53 @@ function AnalyticsContent() {
   const level = useXPStore((s) => s.level)
   const currentStreak = useXPStore((s) => s.currentStreak)
   const totalLearningTime = useXPStore((s) => s.totalLearningTime)
+  const storeXPHistory = useXPStore((s) => s.xpHistory)
   const skillProfile = useProgressStore((s) => s.skillProfile)
+  const activityLog = useProgressStore((s) => s.activityLog)
 
   const focusHours = (totalLearningTime / 60).toFixed(1)
+
+  // Build 30-day XP chart from real store data
+  const xpHistory = (() => {
+    const days: { day: number; xp: number; date: string }[] = []
+    const today = new Date()
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(today)
+      d.setDate(d.getDate() - i)
+      const dateStr = d.toISOString().split('T')[0]
+      const entry = storeXPHistory.find((e) => e.date === dateStr)
+      days.push({ day: 29 - i, xp: entry?.xp ?? 0, date: dateStr })
+    }
+    return days
+  })()
+  const maxXP = Math.max(1, ...xpHistory.map((d) => d.xp))
+
+  // Build heatmap from real activityLog timestamps (last 350 days → 50 weeks × 7 days)
+  const heatmapData = (() => {
+    const allTimestamps = [
+      ...activityLog.lessonsCompleted,
+      ...activityLog.promptsSent,
+      ...activityLog.flashcardsReviewed,
+      ...activityLog.perfectQuizzes,
+    ]
+    const dayCounts: Record<string, number> = {}
+    for (const ts of allTimestamps) {
+      const dateStr = new Date(ts).toISOString().split('T')[0]
+      dayCounts[dateStr] = (dayCounts[dateStr] || 0) + 1
+    }
+    const today = new Date()
+    const grid: { col: number; row: number; count: number; date: string }[] = []
+    for (let col = 0; col < 50; col++) {
+      for (let row = 0; row < 7; row++) {
+        const daysAgo = (49 - col) * 7 + (6 - row)
+        const d = new Date(today)
+        d.setDate(d.getDate() - daysAgo)
+        const dateStr = d.toISOString().split('T')[0]
+        grid.push({ col, row, count: dayCounts[dateStr] || 0, date: dateStr })
+      }
+    }
+    return grid
+  })()
 
   const skillColors: Record<string, string> = {
     'Fundamentals': 'bg-purple',
@@ -104,11 +134,11 @@ function AnalyticsContent() {
                 <div className="border-b border-text-muted w-full h-0" />
               </div>
 
-              {xpHistory.map((day, i) => (
-                <div key={i} className="group relative flex-1 flex flex-col justify-end items-center h-full">
+              {xpHistory.map((day) => (
+                <div key={day.date} className="group relative flex-1 flex flex-col justify-end items-center h-full">
                   <div
                     className="w-full bg-accent hover:bg-white rounded-t-sm transition-all duration-300 opacity-80"
-                    style={{ height: (day.xp / maxXP) * 100 + '%' }}
+                    style={{ height: day.xp > 0 ? (day.xp / maxXP) * 100 + '%' : '2px' }}
                   />
                   <div className="absolute -top-10 bg-surface-raised text-text-primary text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 border border-border-subtle shadow-xl pointer-events-none">
                     {day.xp} XP
@@ -129,21 +159,24 @@ function AnalyticsContent() {
             </h2>
             <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-hide">
               {Array.from({ length: 50 }).map((_, col) => (
-                <div key={col} className="flex flex-col gap-1 min-w-[12px] md:min-w-[16px]">
-                  {Array.from({ length: 7 }).map((_, row) => {
-                    // Deterministic pattern based on position — placeholder until activity tracking is implemented
-                    const seed = (col * 7 + row) * 2654435761
-                    const activity = ((seed >>> 0) % 100) / 100
-                    let color = 'bg-surface-raised';
-                    if (activity > 0.9) color = 'bg-green';
-                    else if (activity > 0.7) color = 'bg-green/70';
-                    else if (activity > 0.4) color = 'bg-green/40';
-                    else if (activity > 0.2) color = 'bg-green/20';
+                <div key={`col-${col}`} className="flex flex-col gap-1 min-w-[12px] md:min-w-[16px]">
+                  {heatmapData
+                    .filter((cell) => cell.col === col)
+                    .map((cell) => {
+                      let color = 'bg-surface-raised'
+                      if (cell.count >= 5) color = 'bg-green'
+                      else if (cell.count >= 3) color = 'bg-green/70'
+                      else if (cell.count >= 2) color = 'bg-green/40'
+                      else if (cell.count >= 1) color = 'bg-green/20'
 
-                    return (
-                      <div key={row} className={"w-full aspect-square rounded-sm transition-colors hover:ring-2 ring-accent/50 " + color} title="Active day" />
-                    )
-                  })}
+                      return (
+                        <div
+                          key={cell.date}
+                          className={"w-full aspect-square rounded-sm transition-colors hover:ring-2 ring-accent/50 " + color}
+                          title={`${cell.date}: ${cell.count} activities`}
+                        />
+                      )
+                    })}
                 </div>
               ))}
             </div>

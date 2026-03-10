@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
+import { getRank } from '@/lib/get-rank'
 import { AnimatedScore, ConfettiBurst, XPPopup, TimerBar, ScreenFlash, ProgressDots, ComboIndicator, StreakFire, LivesDisplay } from '@/components/ui/GameEffects'
 import { useXPStore } from '@/stores/xp-store'
 import { useProgressStore } from '@/stores/progress-store'
@@ -457,7 +458,7 @@ export default function HintMasterPage() {
             <Trophy size={48} className="text-white" />
           </div>
           <h1 className="text-3xl font-bold text-text-primary mb-1">{survived ? 'All Cases Complete!' : 'Game Over!'}</h1>
-          <p className="text-text-secondary">{accuracy >= 90 ? 'Incredible eye for prompts!' : accuracy >= 70 ? 'Solid fix instincts!' : accuracy >= 50 ? 'Getting there!' : 'Study the lessons and try again!'}</p>
+          <p className="text-text-secondary">{getRank(accuracy, [{ min: 90, label: 'Incredible eye for prompts!' }, { min: 70, label: 'Solid fix instincts!' }, { min: 50, label: 'Getting there!' }], 'Study the lessons and try again!')}</p>
         </div>
 
         <div className="grid grid-cols-3 gap-3 mb-6 max-w-md mx-auto">

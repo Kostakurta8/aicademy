@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useProgressStore } from '@/stores/progress-store'
+import { useWeeklyCount, WEEKLY_CHALLENGE_ACTIVITY } from '@/lib/weekly-progress'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import { Trophy, Clock, Star, Calendar, ChevronRight } from 'lucide-react'
@@ -27,12 +28,13 @@ function getWeeklyChallenge() {
   weekStart.setDate(now.getDate() - now.getDay())
   const weekNum = Math.floor(weekStart.getTime() / (7 * 24 * 60 * 60 * 1000))
   const challenges = [
-    { title: 'Complete 2 Lessons', description: 'Finish any 2 lessons from any module.', xp: 300, progress: 0, goal: 2 },
-    { title: 'Send 15 Prompts', description: 'Send 15 prompts in any sandbox tool.', xp: 250, progress: 0, goal: 15 },
-    { title: 'Review 50 Flashcards', description: 'Review 50 flashcards using spaced repetition.', xp: 200, progress: 0, goal: 50 },
-    { title: 'Perfect Quiz Score', description: 'Get 100% on any quiz.', xp: 400, progress: 0, goal: 1 },
+    { title: 'Complete 2 Lessons', description: 'Finish any 2 lessons from any module.', xp: 300, goal: 2 },
+    { title: 'Send 15 Prompts', description: 'Send 15 prompts in any sandbox tool.', xp: 250, goal: 15 },
+    { title: 'Review 50 Flashcards', description: 'Review 50 flashcards using spaced repetition.', xp: 200, goal: 50 },
+    { title: 'Perfect Quiz Score', description: 'Get 100% on any quiz.', xp: 400, goal: 1 },
   ]
-  return challenges[weekNum % challenges.length]
+  const idx = weekNum % challenges.length
+  return { ...challenges[idx], activityIndex: idx }
 }
 
 const challengeRoutes: Record<string, string> = {
@@ -53,6 +55,10 @@ export default function ChallengesPage() {
   const today = new Date()
   const dailyChallengeId = `daily-${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`
   const dailyCompleted = completedChallenges.includes(dailyChallengeId)
+
+  const activityType = WEEKLY_CHALLENGE_ACTIVITY[weekly.activityIndex]
+  const weeklyProgress = useWeeklyCount(activityType)
+  const weeklyPercent = Math.min((weeklyProgress / weekly.goal) * 100, 100)
 
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto">
@@ -110,10 +116,10 @@ export default function ChallengesPage() {
                 <div className="flex-1 h-2 rounded-full bg-border-subtle overflow-hidden">
                   <div
                     className="h-full rounded-full bg-purple transition-all duration-500"
-                    style={{ width: `${(weekly.progress / weekly.goal) * 100}%` }}
+                    style={{ width: `${weeklyPercent}%` }}
                   />
                 </div>
-                <span className="text-sm text-text-muted">{weekly.progress}/{weekly.goal}</span>
+                <span className="text-sm text-text-muted">{Math.min(weeklyProgress, weekly.goal)}/{weekly.goal}</span>
               </div>
               <span className="flex items-center gap-1 text-sm text-purple font-medium">
                 <Star size={14} />

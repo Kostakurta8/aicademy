@@ -121,8 +121,9 @@ export default function PromptBuilderPage() {
             <h2 className="text-base font-semibold text-text-primary mb-4">Build Your Prompt</h2>
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-purple mb-1 block">🎭 Role</label>
+                <label htmlFor="pb-role" className="text-sm font-medium text-purple mb-1 block">🎭 Role</label>
                 <textarea
+                  id="pb-role"
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
                   className="w-full p-3 rounded-xl bg-surface-raised border border-border-subtle text-text-primary text-sm resize-none h-16 outline-none focus:ring-2 focus:ring-purple"
@@ -130,8 +131,9 @@ export default function PromptBuilderPage() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-blue mb-1 block">📋 Context</label>
+                <label htmlFor="pb-context" className="text-sm font-medium text-blue mb-1 block">📋 Context</label>
                 <textarea
+                  id="pb-context"
                   value={context}
                   onChange={(e) => setContext(e.target.value)}
                   className="w-full p-3 rounded-xl bg-surface-raised border border-border-subtle text-text-primary text-sm resize-none h-16 outline-none focus:ring-2 focus:ring-blue"
@@ -139,8 +141,9 @@ export default function PromptBuilderPage() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-orange mb-1 block">🎯 Task</label>
+                <label htmlFor="pb-task" className="text-sm font-medium text-orange mb-1 block">🎯 Task</label>
                 <textarea
+                  id="pb-task"
                   value={task}
                   onChange={(e) => setTask(e.target.value)}
                   className="w-full p-3 rounded-xl bg-surface-raised border border-border-subtle text-text-primary text-sm resize-none h-16 outline-none focus:ring-2 focus:ring-orange"
@@ -148,8 +151,9 @@ export default function PromptBuilderPage() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-green mb-1 block">📐 Format</label>
+                <label htmlFor="pb-format" className="text-sm font-medium text-green mb-1 block">📐 Format</label>
                 <textarea
+                  id="pb-format"
                   value={format}
                   onChange={(e) => setFormat(e.target.value)}
                   className="w-full p-3 rounded-xl bg-surface-raised border border-border-subtle text-text-primary text-sm resize-none h-16 outline-none focus:ring-2 focus:ring-green"

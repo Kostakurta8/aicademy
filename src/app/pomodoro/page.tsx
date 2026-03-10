@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
+import { useXPStore } from '@/stores/xp-store'
 import { Timer, Play, Pause, RotateCcw, Coffee, BookOpen } from 'lucide-react'
 
 type Mode = 'work' | 'break'
@@ -24,6 +25,7 @@ export default function PomodoroPage() {
   const switchMode = useCallback(() => {
     if (mode === 'work') {
       setSessions((s) => s + 1)
+      useXPStore.getState().addLearningTime(workMinutes)
       setMode('break')
       setSecondsLeft(breakMinutes * 60)
     } else {

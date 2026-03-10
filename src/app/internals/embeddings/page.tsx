@@ -80,7 +80,7 @@ export default function EmbeddingsExplorerPage() {
 
       {/* 2D Map */}
       <Card padding="md" className="mb-6">
-        <div className="relative w-full" style={{ height: 420 }}>
+        <div className="relative w-full h-[420px]">
           <svg width="100%" height="420" viewBox="0 0 700 420" className="overflow-visible">
             {/* Cluster boundaries */}
             {clusters.map((cluster, ci) => {
@@ -104,7 +104,7 @@ export default function EmbeddingsExplorerPage() {
                 <g key={word.text}
                    onMouseEnter={() => setHoveredWord(word.text)}
                    onMouseLeave={() => setHoveredWord(null)}
-                   style={{ cursor: 'pointer' }}
+                   className="cursor-pointer"
                 >
                   <circle
                     cx={word.x} cy={word.y} r={isHovered ? 6 : 4}

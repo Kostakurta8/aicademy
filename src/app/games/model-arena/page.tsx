@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
+import { getRank } from '@/lib/get-rank'
 import { ConfettiBurst, ScreenFlash, XPPopup, TimerBar, AnimatedScore, ComboIndicator, StreakFire } from '@/components/ui/GameEffects'
 import { Swords, RotateCcw, Trophy, Check, X, Zap, ChevronRight, Star, Eye, Crown, Shield, Target } from 'lucide-react'
 import { useXPStore } from '@/stores/xp-store'
@@ -349,7 +350,7 @@ export default function ModelArenaPage() {
   if (phase === 'gameOver') {
     const accuracy = Math.round((correctCount / matchups.length) * 100)
     const totalXP = score + 60
-    const rank = accuracy >= 90 ? '🏆 Arena Champion' : accuracy >= 70 ? '⚔️ Seasoned Judge' : accuracy >= 50 ? '🛡️ Apprentice' : '🔰 Spectator'
+    const rank = getRank(accuracy, [{ min: 90, label: '🏆 Arena Champion' }, { min: 70, label: '⚔️ Seasoned Judge' }, { min: 50, label: '🛡️ Apprentice' }], '🔰 Spectator')
 
     return (
       <div className="p-6 md:p-8 max-w-3xl mx-auto">
