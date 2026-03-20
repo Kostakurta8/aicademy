@@ -6,12 +6,14 @@ import Button from '@/components/ui/Button'
 import ClientOnly from '@/components/ui/ClientOnly'
 import { useFlashcardStore, type FlashCard } from '@/stores/flashcard-store'
 import { useXPStore } from '@/stores/xp-store'
+import { useSubscriptionStore, FREE_FLASHCARD_DECK_LIMIT } from '@/stores/subscription-store'
 import { playCorrect, playXPDing, playIncorrect } from '@/lib/sounds'
 import {
   Layers, RotateCcw, Check, Brain, Plus, Trash2,
   Edit3, BarChart3, BookOpen, FolderOpen, X, Save,
-  Award, Clock, TrendingUp,
+  Award, Clock, TrendingUp, Lock, Crown,
 } from 'lucide-react'
+import Link from 'next/link'
 
 type Tab = 'review' | 'cards' | 'stats'
 
@@ -210,6 +212,7 @@ function CardsTab() {
   const deleteCard = useFlashcardStore((s) => s.deleteCard)
   const addDeck = useFlashcardStore((s) => s.addDeck)
   const deleteDeck = useFlashcardStore((s) => s.deleteDeck)
+  const canCreateDeck = useSubscriptionStore((s) => s.canCreateFlashcardDeck(decks.length))
 
   const [filterDeck, setFilterDeck] = useState<string | null>(null)
   const [showAdd, setShowAdd] = useState(false)
@@ -351,9 +354,15 @@ function CardsTab() {
                     </select>
                   </div>
                   {!showDeckInput ? (
-                    <Button size="sm" variant="ghost" onClick={() => setShowDeckInput(true)}>
-                      <FolderOpen size={14} /> New Deck
-                    </Button>
+                    canCreateDeck ? (
+                      <Button size="sm" variant="ghost" onClick={() => setShowDeckInput(true)}>
+                        <FolderOpen size={14} /> New Deck
+                      </Button>
+                    ) : (
+                      <Link href="/pricing" className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-purple bg-purple/10 hover:bg-purple/20 transition-colors">
+                        <Crown size={12} /> Pro: Unlimited Decks
+                      </Link>
+                    )
                   ) : (
                     <div className="flex gap-1">
                       <input

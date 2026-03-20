@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'aicademy-v3'
+const CACHE_VERSION = 'aicademy-v4'
 const STATIC_CACHE = `${CACHE_VERSION}-static`
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`
 
@@ -88,4 +88,55 @@ self.addEventListener('fetch', (event) => {
         )
     )
   }
+})
+
+// ── Push Notifications ──
+self.addEventListener('push', (event) => {
+  const defaults = {
+    title: 'AIcademy',
+    body: 'Time to learn something new!',
+    icon: '/icons/icon-192.png',
+    badge: '/icons/badge-72.png',
+    tag: 'aicademy-notification',
+    data: { url: '/' },
+  }
+
+  let payload = defaults
+  if (event.data) {
+    try {
+      payload = { ...defaults, ...event.data.json() }
+    } catch {
+      payload = { ...defaults, body: event.data.text() }
+    }
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title, {
+      body: payload.body,
+      icon: payload.icon,
+      badge: payload.badge,
+      tag: payload.tag,
+      data: payload.data,
+      vibrate: [200, 100, 200],
+      actions: [
+        { action: 'open', title: 'Open App' },
+        { action: 'dismiss', title: 'Dismiss' },
+      ],
+    })
+  )
+})
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+
+  if (event.action === 'dismiss') return
+
+  const url = event.notification.data?.url || '/'
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      const existing = clients.find((c) => c.url.includes(url))
+      if (existing) return existing.focus()
+      return self.clients.openWindow(url)
+    })
+  )
 })

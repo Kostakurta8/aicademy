@@ -8,8 +8,10 @@ import { useUserStore } from '@/stores/user-store'
 import { useXPStore, XP_PER_LEVEL, DAILY_REWARDS, DAILY_XP_GOAL } from '@/stores/xp-store'
 import { useProgressStore } from '@/stores/progress-store'
 import { useAchievementStore, type AchievementStats } from '@/stores/achievement-store'
+import { useLeaderboardStore } from '@/stores/leaderboard-store'
 import { hapticTap } from '@/lib/sounds'
-import { useEffect } from 'react'
+import { requestNotificationPermission, isNotificationEnabled, scheduleStreakReminder } from '@/lib/notifications'
+import { useEffect, useState, useCallback } from 'react'
 import {
   Flame,
   Star,
@@ -27,6 +29,10 @@ import {
   Play,
   Medal,
   PartyPopper,
+  Bell,
+  BellOff,
+  Rocket,
+  Crown,
 } from 'lucide-react'
 import { learningPath, TOTAL_LESSONS, quickActions } from '@/data/modules'
 
@@ -62,6 +68,21 @@ export default function DashboardPage() {
           <AchievementShowcase />
         </ClientOnly>
       </div>
+
+      {/* Row 3.6: XP Boost + Leaderboard Mini */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <ClientOnly fallback={<div className="h-28" />}>
+          <XPBoostCard />
+        </ClientOnly>
+        <ClientOnly fallback={<div className="h-28" />}>
+          <LeaderboardMini />
+        </ClientOnly>
+      </div>
+
+      {/* Notification Permission Prompt */}
+      <ClientOnly fallback={null}>
+        <NotificationPrompt />
+      </ClientOnly>
 
       {/* Row 4: Quick Actions — 4 big tap targets */}
       <div className="grid grid-cols-4 gap-2 md:gap-3 animate-fade-in">
@@ -478,6 +499,195 @@ function LearningJourney() {
             </Link>
           )
         })}
+      </div>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════
+   XPBoostCard — activate 2x XP for 1 hour
+   Available when daily goal is completed
+   ═══════════════════════════════════════ */
+function XPBoostCard() {
+  const boostActive = useXPStore((s) => s.isBoostActive())
+  const remaining = useXPStore((s) => s.getBoostTimeRemaining())
+  const dailyGoalCompleted = useXPStore((s) => s.dailyGoalCompleted)
+  const activateBoost = useXPStore((s) => s.activateXPBoost)
+  const [timeLeft, setTimeLeft] = useState('')
+
+  useEffect(() => {
+    if (!boostActive) return
+    const interval = setInterval(() => {
+      const ms = useXPStore.getState().getBoostTimeRemaining()
+      if (ms <= 0) { setTimeLeft(''); return }
+      const m = Math.floor(ms / 60000)
+      const s = Math.floor((ms % 60000) / 1000)
+      setTimeLeft(`${m}:${s.toString().padStart(2, '0')}`)
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [boostActive])
+
+  if (boostActive) {
+    return (
+      <div className="animate-fade-in">
+        <Card padding="md" className="border-l-4 border-l-purple relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple/5 to-blue/5 pointer-events-none" />
+          <div className="flex items-center gap-3 relative z-10">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple to-blue flex items-center justify-center animate-pulse-glow">
+              <Rocket size={20} className="text-white" />
+            </div>
+            <div className="flex-1">
+              <span className="text-sm font-bold text-purple">2x XP Active!</span>
+              <p className="text-[11px] text-text-muted">{timeLeft} remaining</p>
+            </div>
+            <span className="text-2xl animate-wiggle">⚡</span>
+          </div>
+        </Card>
+      </div>
+    )
+  }
+
+  return (
+    <div className="animate-fade-in">
+      <Card padding="md">
+        <div className="flex items-center gap-3">
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+            dailyGoalCompleted ? 'bg-gradient-to-br from-purple to-blue' : 'bg-surface-raised'
+          }`}>
+            <Rocket size={20} className={dailyGoalCompleted ? 'text-white' : 'text-text-muted'} />
+          </div>
+          <div className="flex-1">
+            <span className="text-xs font-bold text-text-primary">XP Boost</span>
+            <p className="text-[10px] text-text-muted">
+              {dailyGoalCompleted ? 'Daily goal done! Activate 2x XP' : 'Complete daily goal to unlock'}
+            </p>
+          </div>
+          <button
+            onClick={() => { hapticTap(); activateBoost(2, 60 * 60 * 1000) }}
+            disabled={!dailyGoalCompleted}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all tap-bounce ${
+              dailyGoalCompleted
+                ? 'bg-gradient-to-r from-purple to-blue text-white hover:brightness-110'
+                : 'bg-surface-raised text-text-muted cursor-not-allowed'
+            }`}
+          >
+            2x for 1hr
+          </button>
+        </div>
+      </Card>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════
+   LeaderboardMini — top 5 + user rank
+   ═══════════════════════════════════════ */
+function LeaderboardMini() {
+  const totalXP = useXPStore((s) => s.totalXP)
+  const name = useUserStore((s) => s.name)
+  const level = useXPStore((s) => s.level)
+  const streak = useXPStore((s) => s.currentStreak)
+  const getWeekly = useLeaderboardStore((s) => s.getWeeklyLeaderboard)
+
+  const board = getWeekly(totalXP, name || 'You', level, streak)
+  const userRank = board.findIndex(e => e.isCurrentUser) + 1
+  const top5 = board.slice(0, 5)
+
+  return (
+    <div className="animate-fade-in">
+      <Card padding="md">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-xs font-bold text-text-primary flex items-center gap-1.5">
+            <Trophy size={14} className="text-gold" /> Weekly Leaderboard
+          </h3>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-accent/10 text-accent font-bold">
+            #{userRank}
+          </span>
+        </div>
+        <div className="space-y-1.5">
+          {top5.map((entry, i) => (
+            <div
+              key={entry.id}
+              className={`flex items-center gap-2 px-2 py-1 rounded-lg text-xs transition-all ${
+                entry.isCurrentUser ? 'bg-accent/10 border border-accent/20' : ''
+              }`}
+            >
+              <span className={`w-4 text-center font-black ${
+                i === 0 ? 'text-gold' : i === 1 ? 'text-text-muted' : i === 2 ? 'text-orange' : 'text-text-muted'
+              }`}>
+                {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`}
+              </span>
+              <span className="text-sm">{entry.avatar}</span>
+              <span className={`flex-1 truncate font-medium ${entry.isCurrentUser ? 'text-accent' : 'text-text-secondary'}`}>
+                {entry.isCurrentUser ? 'You' : entry.name}
+              </span>
+              <span className="font-bold text-text-muted">{entry.xp.toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+        {userRank > 5 && (
+          <div className="mt-1.5 pt-1.5 border-t border-border-subtle flex items-center gap-2 px-2 text-xs">
+            <span className="w-4 text-center font-black text-accent">#{userRank}</span>
+            <span className="text-sm">🧑‍💻</span>
+            <span className="flex-1 truncate font-medium text-accent">You</span>
+            <span className="font-bold text-accent">{totalXP.toLocaleString()}</span>
+          </div>
+        )}
+      </Card>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════
+   NotificationPrompt — ask for notification
+   permission (shows once, dismissible)
+   ═══════════════════════════════════════ */
+function NotificationPrompt() {
+  const [visible, setVisible] = useState(false)
+  const streak = useXPStore((s) => s.currentStreak)
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('Notification' in window)) return
+    if (Notification.permission !== 'default') return
+    // Show prompt after user has a streak going (more invested)
+    if (streak >= 2) setVisible(true)
+  }, [streak])
+
+  // Schedule streak reminder whenever dashboard loads
+  useEffect(() => {
+    if (streak > 0) scheduleStreakReminder(streak)
+  }, [streak])
+
+  const handleEnable = useCallback(async () => {
+    const granted = await requestNotificationPermission()
+    if (granted) scheduleStreakReminder(streak)
+    setVisible(false)
+  }, [streak])
+
+  if (!visible) return null
+
+  return (
+    <div className="animate-slide-up">
+      <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-accent/5 border border-accent/10">
+        <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+          <Bell size={18} className="text-accent" />
+        </div>
+        <div className="flex-1">
+          <span className="text-xs font-bold text-text-primary">Never lose your streak!</span>
+          <p className="text-[10px] text-text-muted">Get a reminder if you&apos;re about to lose your {streak}-day streak</p>
+        </div>
+        <button
+          onClick={handleEnable}
+          className="px-3 py-1.5 rounded-lg bg-accent text-white text-xs font-bold tap-bounce hover:brightness-110 transition-all"
+        >
+          Enable
+        </button>
+        <button
+          onClick={() => setVisible(false)}
+          className="text-text-muted hover:text-text-primary transition-colors"
+        >
+          <BellOff size={14} />
+        </button>
       </div>
     </div>
   )

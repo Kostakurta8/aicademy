@@ -2,11 +2,9 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useAIStore } from '@/stores/ai-store'
-import { useSubscriptionStore, FREE_DAILY_AI_LIMIT } from '@/stores/subscription-store'
 import { streamChat, useBufferedStream, type AIMessage } from '@/lib/ai/groq-client'
 import ClientOnly from '@/components/ui/ClientOnly'
-import { MessageCircle, X, Send, Trash2, Loader2, StopCircle, GitBranch, ChevronLeft, ChevronRight, Crown } from 'lucide-react'
-import Link from 'next/link'
+import { MessageCircle, X, Send, Trash2, Loader2, StopCircle, GitBranch, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const TUTOR_SYSTEM_PROMPT = `You are AIcademy's AI Tutor — a friendly, encouraging mentor who helps users learn about AI and technology. 
 
@@ -40,10 +38,6 @@ function AITutorInner() {
   const abortCurrentRequest = useAIStore((s) => s.abortCurrentRequest)
   const setAbortController = useAIStore((s) => s.setAbortController)
   const selectedModel = useAIStore((s) => s.selectedModel)
-  const canSendAI = useSubscriptionStore((s) => s.canSendAIMessage())
-  const remainingMsgs = useSubscriptionStore((s) => s.getRemainingMessages())
-  const userPlan = useSubscriptionStore((s) => s.plan)
-  const useAIMessage = useSubscriptionStore((s) => s.useAIMessage)
 
   const [input, setInput] = useState('')
   const [showHistory, setShowHistory] = useState(false)
@@ -75,9 +69,6 @@ function AITutorInner() {
 
   const handleSend = async () => {
     if (!input.trim() || isGenerating) return
-
-    // Check AI message limit for free users
-    if (!useAIMessage()) return
 
     let convId = activeConversationId
     if (!convId) {
@@ -245,19 +236,7 @@ function AITutorInner() {
 
             {/* Input */}
             <div className="p-3 border-t border-border-subtle">
-              {!canSendAI && userPlan === 'free' ? (
-                <div className="text-center py-2">
-                  <p className="text-xs text-text-muted mb-2">You&apos;ve used all {FREE_DAILY_AI_LIMIT} free messages today</p>
-                  <Link href="/pricing" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-purple to-blue text-white text-sm font-medium hover:opacity-90 transition-opacity">
-                    <Crown size={14} /> Upgrade to Pro — Unlimited
-                  </Link>
-                </div>
-              ) : (
-                <>
-                  {userPlan === 'free' && remainingMsgs <= 3 && remainingMsgs > 0 && (
-                    <p className="text-[10px] text-orange text-center mb-1">{remainingMsgs} message{remainingMsgs !== 1 ? 's' : ''} left today</p>
-                  )}
-                  <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
                 <input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -285,8 +264,6 @@ function AITutorInner() {
                   </button>
                 )}
               </div>
-                </>
-              )}
             </div>
           </div>
         )}

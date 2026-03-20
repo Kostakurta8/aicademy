@@ -1,33 +1,29 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import type { ModuleSlug, GameSlug } from '@/types'
 
 export type PlanType = 'free' | 'pro'
+
+// ── Content gating: first 3 modules, 5 games, basic flashcards are free ──
+export const FREE_MODULES: ModuleSlug[] = ['foundations', 'prompt-engineering', 'tools-ecosystem']
+export const FREE_GAMES: GameSlug[] = ['token-tetris', 'speed-type', 'ai-timeline', 'ai-myth-busters', 'prompt-duel']
+export const FREE_FLASHCARD_DECK_LIMIT = 3
 
 interface SubscriptionStore {
   plan: PlanType
   stripeCustomerId: string | null
   stripeSubscriptionId: string | null
   currentPeriodEnd: string | null
-  aiMessagesUsedToday: number
-  aiMessageDate: string
-  // Free tier limits
-  dailyAILimit: number
 
   // Actions
   setPlan: (plan: PlanType) => void
   setStripeCustomerId: (id: string) => void
   setStripeSubscriptionId: (id: string) => void
   setCurrentPeriodEnd: (date: string) => void
-  useAIMessage: () => boolean
-  canSendAIMessage: () => boolean
-  getRemainingMessages: () => number
-  resetDailyCount: () => void
-}
-
-const FREE_DAILY_AI_LIMIT = 10
-
-function getToday(): string {
-  return new Date().toISOString().split('T')[0]
+  canAccessModule: (slug: string) => boolean
+  canAccessGame: (slug: string) => boolean
+  canCreateFlashcardDeck: (currentDeckCount: number) => boolean
+  isPro: () => boolean
 }
 
 export const useSubscriptionStore = create<SubscriptionStore>()(
@@ -37,55 +33,28 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
       stripeCustomerId: null,
       stripeSubscriptionId: null,
       currentPeriodEnd: null,
-      aiMessagesUsedToday: 0,
-      aiMessageDate: '',
-      dailyAILimit: FREE_DAILY_AI_LIMIT,
 
       setPlan: (plan) => set({ plan }),
       setStripeCustomerId: (id) => set({ stripeCustomerId: id }),
       setStripeSubscriptionId: (id) => set({ stripeSubscriptionId: id }),
       setCurrentPeriodEnd: (date) => set({ currentPeriodEnd: date }),
 
-      useAIMessage: () => {
-        const state = get()
-        const today = getToday()
-
-        // Pro users have unlimited
-        if (state.plan === 'pro') return true
-
-        // Reset counter if new day
-        if (state.aiMessageDate !== today) {
-          set({ aiMessagesUsedToday: 1, aiMessageDate: today })
-          return true
-        }
-
-        if (state.aiMessagesUsedToday >= FREE_DAILY_AI_LIMIT) {
-          return false
-        }
-
-        set({ aiMessagesUsedToday: state.aiMessagesUsedToday + 1 })
-        return true
+      canAccessModule: (slug) => {
+        if (get().plan === 'pro') return true
+        return FREE_MODULES.includes(slug as ModuleSlug)
       },
 
-      canSendAIMessage: () => {
-        const state = get()
-        if (state.plan === 'pro') return true
-        const today = getToday()
-        if (state.aiMessageDate !== today) return true
-        return state.aiMessagesUsedToday < FREE_DAILY_AI_LIMIT
+      canAccessGame: (slug) => {
+        if (get().plan === 'pro') return true
+        return FREE_GAMES.includes(slug as GameSlug)
       },
 
-      getRemainingMessages: () => {
-        const state = get()
-        if (state.plan === 'pro') return Infinity
-        const today = getToday()
-        if (state.aiMessageDate !== today) return FREE_DAILY_AI_LIMIT
-        return Math.max(0, FREE_DAILY_AI_LIMIT - state.aiMessagesUsedToday)
+      canCreateFlashcardDeck: (currentDeckCount) => {
+        if (get().plan === 'pro') return true
+        return currentDeckCount < FREE_FLASHCARD_DECK_LIMIT
       },
 
-      resetDailyCount: () => {
-        set({ aiMessagesUsedToday: 0, aiMessageDate: getToday() })
-      },
+      isPro: () => get().plan === 'pro',
     }),
     {
       name: 'aicademy-subscription',
@@ -93,5 +62,3 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
     }
   )
 )
-
-export { FREE_DAILY_AI_LIMIT }

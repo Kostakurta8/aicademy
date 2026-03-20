@@ -5,7 +5,8 @@ import Card from '@/components/ui/Card'
 import DifficultyBadge from '@/components/ui/DifficultyBadge'
 import ClientOnly from '@/components/ui/ClientOnly'
 import { useProgressStore } from '@/stores/progress-store'
-import { CheckCircle, Play } from 'lucide-react'
+import { useSubscriptionStore, FREE_MODULES } from '@/stores/subscription-store'
+import { CheckCircle, Play, Lock, Crown } from 'lucide-react'
 import { modules, difficultyMap, accentColors } from '@/data/modules'
 
 export default function ModulesPage() {
@@ -33,6 +34,8 @@ export default function ModulesPage() {
 
 function ModulesGrid() {
   const moduleProgress = useProgressStore((s) => s.moduleProgress)
+  const canAccessModule = useSubscriptionStore((s) => s.canAccessModule)
+  const isPro = useSubscriptionStore((s) => s.isPro())
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
@@ -42,12 +45,43 @@ function ModulesGrid() {
         const isComplete = completedCount >= mod.lessons
         const isStarted = completedCount > 0
         const pct = Math.round((completedCount / mod.lessons) * 100)
+        const isFree = FREE_MODULES.includes(mod.slug as typeof FREE_MODULES[number])
+        const locked = !canAccessModule(mod.slug)
 
         return (
-          <div
-            key={mod.slug}
-          >
-            <Link href={`/modules/${mod.slug}`}>
+          <div key={mod.slug}>
+            {locked ? (
+              <Link href="/pricing">
+                <Card className="h-full group relative overflow-hidden opacity-80 hover:opacity-100 transition-opacity" padding="md">
+                  {/* Lock overlay */}
+                  <div className="absolute inset-0 bg-surface/60 backdrop-blur-[1px] z-10 flex flex-col items-center justify-center rounded-2xl">
+                    <div className="w-12 h-12 rounded-full bg-purple/10 flex items-center justify-center mb-2">
+                      <Lock size={20} className="text-purple" />
+                    </div>
+                    <p className="text-sm font-semibold text-text-primary">Pro Module</p>
+                    <p className="text-xs text-text-muted mt-1 flex items-center gap-1"><Crown size={12} className="text-purple" /> Unlock with Pro</p>
+                  </div>
+                  <div className="flex flex-col h-full">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${accentColors[mod.accent]} flex items-center justify-center`}>
+                        <mod.icon size={24} className="text-white" />
+                      </div>
+                    </div>
+                    <h3 className="text-base font-semibold text-text-primary mb-1">{mod.title}</h3>
+                    <p className="text-xs text-accent font-medium mb-2">{mod.tagline}</p>
+                    <p className="text-sm text-text-secondary mb-4 flex-1">{mod.description}</p>
+                    <div className="flex items-center justify-between pt-3 border-t border-border-subtle">
+                      <div className="flex items-center gap-3 text-xs text-text-muted">
+                        <span>{mod.lessons} lessons</span>
+                        <span>~{mod.estimatedHours}h</span>
+                      </div>
+                      <DifficultyBadge difficulty={difficultyMap[mod.difficulty]} />
+                    </div>
+                  </div>
+                </Card>
+              </Link>
+            ) : (
+              <Link href={`/modules/${mod.slug}`}>
               <Card className={`h-full group ${isComplete ? 'ring-2 ring-green/40' : ''}`} padding="md">
                 <div className="flex flex-col h-full">
                   {/* Icon */}
@@ -55,12 +89,14 @@ function ModulesGrid() {
                     <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${accentColors[mod.accent]} flex items-center justify-center`}>
                       <mod.icon size={24} className="text-white" />
                     </div>
-                    {isComplete && (
+                    {isComplete ? (
                       <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-green/10 border border-green/20">
                         <CheckCircle size={14} className="text-green" />
                         <span className="text-[10px] font-bold text-green">Done</span>
                       </div>
-                    )}
+                    ) : isFree && !isPro ? (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-green/10 text-green font-medium border border-green/20">FREE</span>
+                    ) : null}
                   </div>
 
                   {/* Content */}
@@ -97,6 +133,7 @@ function ModulesGrid() {
                 </div>
               </Card>
             </Link>
+            )}
           </div>
         )
       })}

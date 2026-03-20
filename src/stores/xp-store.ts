@@ -29,6 +29,9 @@ interface XPStore {
   dailyXPEarned: number
   dailyXPDate: string
   dailyGoalCompleted: boolean
+  // XP Boost
+  xpBoostMultiplier: number
+  xpBoostEndTime: number | null
 
   addXP: (amount: number, moduleId?: string) => void
   checkStreak: () => void
@@ -39,6 +42,10 @@ interface XPStore {
   claimDailyReward: () => number
   getDailyRewardAmount: () => number
   getDailyXPProgress: () => { earned: number; goal: number; percent: number }
+  activateXPBoost: (multiplier: number, durationMs: number) => void
+  getXPMultiplier: () => number
+  isBoostActive: () => boolean
+  getBoostTimeRemaining: () => number
 }
 
 const XP_PER_LEVEL = [
@@ -80,24 +87,29 @@ export const useXPStore = create<XPStore>()(
       dailyXPEarned: 0,
       dailyXPDate: '',
       dailyGoalCompleted: false,
+      xpBoostMultiplier: 1,
+      xpBoostEndTime: null,
 
       addXP: (amount, moduleId) => {
         const oldLevel = get().level
+        // Apply XP boost multiplier
+        const multiplier = get().getXPMultiplier()
+        const boostedAmount = Math.round(amount * multiplier)
         set((s) => {
-          const newXP = s.totalXP + amount
+          const newXP = s.totalXP + boostedAmount
           const newLevel = getLevelForXP(newXP)
           const today = getToday()
           const existingEntry = s.xpHistory.find((e) => e.date === today)
           const xpHistory = existingEntry
-            ? s.xpHistory.map((e) => (e.date === today ? { ...e, xp: e.xp + amount } : e))
-            : [...s.xpHistory.slice(-89), { date: today, xp: amount }]
+            ? s.xpHistory.map((e) => (e.date === today ? { ...e, xp: e.xp + boostedAmount } : e))
+            : [...s.xpHistory.slice(-89), { date: today, xp: boostedAmount }]
           const lifetimeXPByModule = moduleId
-            ? { ...s.lifetimeXPByModule, [moduleId]: (s.lifetimeXPByModule[moduleId] || 0) + amount }
+            ? { ...s.lifetimeXPByModule, [moduleId]: (s.lifetimeXPByModule[moduleId] || 0) + boostedAmount }
             : s.lifetimeXPByModule
 
           // Daily goal tracking
           const dailyXPDate = s.dailyXPDate === today ? s.dailyXPDate : today
-          const dailyXPEarned = s.dailyXPDate === today ? s.dailyXPEarned + amount : amount
+          const dailyXPEarned = s.dailyXPDate === today ? s.dailyXPEarned + boostedAmount : boostedAmount
           const dailyGoalCompleted = dailyXPEarned >= DAILY_XP_GOAL
 
           return { totalXP: newXP, level: newLevel, xpHistory, lifetimeXPByModule, dailyXPEarned, dailyXPDate, dailyGoalCompleted }
@@ -109,7 +121,7 @@ export const useXPStore = create<XPStore>()(
         }
         // Celebrate daily goal completion
         const state = get()
-        if (state.dailyGoalCompleted && state.dailyXPEarned - amount < DAILY_XP_GOAL) {
+        if (state.dailyGoalCompleted && state.dailyXPEarned - boostedAmount < DAILY_XP_GOAL) {
           hapticCelebrate()
           celebrate({ type: 'achievement', title: 'Daily Goal! 🎯', subtitle: `You earned ${DAILY_XP_GOAL} XP today!`, value: '🏆 Goal Complete' })
         }
@@ -223,6 +235,33 @@ export const useXPStore = create<XPStore>()(
         const today = getToday()
         const earned = dailyXPDate === today ? dailyXPEarned : 0
         return { earned, goal: DAILY_XP_GOAL, percent: Math.min((earned / DAILY_XP_GOAL) * 100, 100) }
+      },
+
+      activateXPBoost: (multiplier, durationMs) => {
+        const endTime = Date.now() + durationMs
+        set({ xpBoostMultiplier: multiplier, xpBoostEndTime: endTime })
+        celebrate({ type: 'achievement', title: `${multiplier}x XP Boost! ⚡`, subtitle: `Active for ${Math.round(durationMs / 60000)} minutes`, value: `${multiplier}x XP` })
+        hapticCelebrate()
+      },
+
+      getXPMultiplier: () => {
+        const { xpBoostMultiplier, xpBoostEndTime } = get()
+        if (!xpBoostEndTime || Date.now() >= xpBoostEndTime) {
+          if (xpBoostEndTime) set({ xpBoostMultiplier: 1, xpBoostEndTime: null })
+          return 1
+        }
+        return xpBoostMultiplier
+      },
+
+      isBoostActive: () => {
+        const { xpBoostEndTime } = get()
+        return !!xpBoostEndTime && Date.now() < xpBoostEndTime
+      },
+
+      getBoostTimeRemaining: () => {
+        const { xpBoostEndTime } = get()
+        if (!xpBoostEndTime) return 0
+        return Math.max(0, xpBoostEndTime - Date.now())
       },
     }),
     { name: 'aicademy-xp', skipHydration: true }

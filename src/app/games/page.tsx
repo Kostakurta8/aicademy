@@ -5,10 +5,11 @@ import Link from 'next/link'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import {
-  Gamepad2, Star, Target, Flame, Medal, ChevronRight, Sparkles,
+  Gamepad2, Star, Target, Flame, Medal, ChevronRight, Sparkles, Lock, Crown,
 } from 'lucide-react'
 import { useXPStore } from '@/stores/xp-store'
 import { useProgressStore } from '@/stores/progress-store'
+import { useSubscriptionStore, FREE_GAMES } from '@/stores/subscription-store'
 import { dailyChallenges, games, difficultyColor } from '@/data/games'
 
 type Tab = 'games' | 'challenges' | 'leaderboard'
@@ -17,6 +18,8 @@ export default function GamesPage() {
   const [activeTab, setActiveTab] = useState<Tab>('games')
   const xp = useXPStore((s) => s.totalXP)
   const completedChallenges = useProgressStore((s) => s.completedChallenges)
+  const canAccessGame = useSubscriptionStore((s) => s.canAccessGame)
+  const isPro = useSubscriptionStore((s) => s.isPro())
 
   const completedCount = dailyChallenges.filter(c => completedChallenges.includes(c.id)).length
 
@@ -86,15 +89,26 @@ export default function GamesPage() {
         {activeTab === 'games' && (
           <div className="animate-fade-in">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {games.map((game, idx) => (
+              {games.map((game, idx) => {
+                const isFree = FREE_GAMES.includes(game.slug as typeof FREE_GAMES[number])
+                const locked = !canAccessGame(game.slug)
+                return (
                 <div
                   key={game.slug}
                   className="animate-fade-in"
                   style={{ animationDelay: `${idx * 0.04}s`, animationFillMode: 'both' }}
                 >
-                  <Link href={`/games/${game.slug}`}>
-                    <Card className="h-full group cursor-pointer relative overflow-hidden" padding="md">
-                      {/* CSS-only hover gradient */}
+                  <Link href={locked ? '/pricing' : `/games/${game.slug}`}>
+                    <Card className={`h-full group cursor-pointer relative overflow-hidden ${locked ? 'opacity-80 hover:opacity-100' : ''}`} padding="md">
+                      {locked && (
+                        <div className="absolute inset-0 bg-surface/60 backdrop-blur-[1px] z-10 flex flex-col items-center justify-center rounded-2xl">
+                          <div className="w-10 h-10 rounded-full bg-purple/10 flex items-center justify-center mb-1.5">
+                            <Lock size={18} className="text-purple" />
+                          </div>
+                          <p className="text-xs font-semibold text-text-primary">Pro Game</p>
+                          <p className="text-[10px] text-text-muted flex items-center gap-1"><Crown size={10} className="text-purple" /> Unlock with Pro</p>
+                        </div>
+                      )}
                       <div className={`absolute inset-0 bg-gradient-to-br ${game.color} opacity-0 group-hover:opacity-[0.03] rounded-2xl transition-opacity duration-200`} />
 
                       <div className="flex items-start justify-between mb-3 relative">
@@ -103,6 +117,7 @@ export default function GamesPage() {
                         </div>
                         <div className="flex flex-col items-end gap-1">
                           <span className="text-[10px] px-2 py-0.5 rounded-full bg-surface-raised text-text-muted">{game.tag}</span>
+                          {isFree && !isPro && <span className="text-[10px] px-2 py-0.5 rounded-full bg-green/10 text-green font-medium border border-green/20">FREE</span>}
                           <span className="text-[10px] text-text-muted">~{game.playTime}</span>
                         </div>
                       </div>
@@ -124,7 +139,8 @@ export default function GamesPage() {
                     </Card>
                   </Link>
                 </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         )}

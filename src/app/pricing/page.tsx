@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useSubscriptionStore, FREE_DAILY_AI_LIMIT } from '@/stores/subscription-store'
+import { useSubscriptionStore } from '@/stores/subscription-store'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import ClientOnly from '@/components/ui/ClientOnly'
@@ -9,12 +9,15 @@ import {
   Crown,
   Check,
   Zap,
-  MessageCircle,
   Infinity,
   Star,
   Sparkles,
   Shield,
   ArrowLeft,
+  Lock,
+  Gamepad2,
+  BookOpen,
+  Layers,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -24,18 +27,19 @@ const PLANS = [
     name: 'Free',
     price: '$0',
     period: 'forever',
-    description: 'Perfect for getting started with AI literacy',
+    description: 'Start learning AI with essential content',
     features: [
-      `${FREE_DAILY_AI_LIMIT} AI messages per day`,
-      'All 8 learning modules',
-      '13 educational games',
+      '3 foundational modules',
+      '5 educational games',
+      '3 custom flashcard decks',
+      'Unlimited AI tutor chat',
       'XP & leveling system',
-      'Streak tracking',
-      'Basic progress stats',
+      'Daily streaks & rewards',
     ],
     limitations: [
-      'Limited AI chat',
-      'No priority support',
+      '5 modules locked',
+      '8 games locked',
+      'Limited flashcard decks',
     ],
     cta: 'Current Plan',
     popular: false,
@@ -45,17 +49,16 @@ const PLANS = [
     name: 'Pro',
     price: '$4.99',
     period: '/month',
-    description: 'Unlimited AI power for serious learners',
+    description: 'Full access to everything AIcademy offers',
     features: [
-      'Unlimited AI messages',
       'All 8 learning modules',
-      '13 educational games',
-      'XP & leveling system',
-      'Streak tracking',
-      'Advanced analytics',
-      'Priority AI responses',
+      'All 13 educational games',
+      'Unlimited flashcard decks',
+      'Unlimited AI tutor chat',
+      'XP boosts (2x for 1 hour)',
+      'Leaderboard ranking',
       'Exclusive Pro badge',
-      'Early access to new features',
+      'Priority new features',
     ],
     limitations: [],
     cta: 'Upgrade to Pro',
@@ -146,7 +149,7 @@ function PricingContent() {
         <div className="mb-8 p-4 rounded-2xl bg-green/10 border border-green/20 text-center">
           <Sparkles size={32} className="text-green mx-auto mb-2" />
           <h2 className="text-xl font-bold text-green">Welcome to Pro! 🎉</h2>
-          <p className="text-sm text-text-secondary mt-1">You now have unlimited AI messages and all Pro features.</p>
+          <p className="text-sm text-text-secondary mt-1">You now have full access to all modules, games, and Pro features.</p>
         </div>
       )}
 
@@ -164,7 +167,7 @@ function PricingContent() {
           Unlock Your Full AI Potential
         </h1>
         <p className="text-lg text-text-secondary max-w-2xl mx-auto">
-          Learn AI for free, or go Pro for unlimited AI chat and exclusive features.
+          Start learning AI for free, or go Pro to unlock all modules, games, and features.
         </p>
       </div>
 
@@ -207,6 +210,12 @@ function PricingContent() {
                   <span className="text-text-secondary">{feat}</span>
                 </li>
               ))}
+              {p.limitations.map((lim) => (
+                <li key={lim} className="flex items-start gap-2 text-sm">
+                  <Lock size={16} className="text-text-muted/40 shrink-0 mt-0.5" />
+                  <span className="text-text-muted">{lim}</span>
+                </li>
+              ))}
             </ul>
 
             {p.id === 'free' ? (
@@ -234,7 +243,7 @@ function PricingContent() {
           <Shield size={16} /> Secure payments via Stripe
         </div>
         <div className="flex items-center gap-2 text-sm">
-          <MessageCircle size={16} /> Cancel anytime
+          <Star size={16} /> Cancel anytime
         </div>
         <div className="flex items-center gap-2 text-sm">
           <Star size={16} /> 30-day money-back guarantee
