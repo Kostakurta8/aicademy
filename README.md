@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AIcademy — AI Literacy Learning Platform
 
-## Getting Started
+Interactive lessons, games, sandboxes, and gamified learning for understanding AI. Powered by Groq AI.
 
-First, run the development server:
+## Tech Stack
+
+- **Next.js 16** (Turbopack) + **React 19** + **TypeScript 5**
+- **Tailwind CSS 4** + glassmorphism design system
+- **Zustand 5** for state (localStorage persistence, no database)
+- **Groq API** for AI features (chat, sandbox, missions)
+- **Vitest** + Testing Library for tests
+
+## Getting Started (Local)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # then add your Groq API key
+npm run dev                   # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Get a free Groq API key at https://console.groq.com/keys
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start dev server |
+| `npm run build` | Production build |
+| `npm start` | Start production server |
+| `npm run lint` | ESLint check |
+| `npm test` | Run tests |
 
-## Learn More
+## Environment Variables
 
-To learn more about Next.js, take a look at the following resources:
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `GROQ_API_KEY` | Yes (for AI features) | Groq API key — the rest of the app works without it |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deploy to Vercel (Recommended)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Go to [vercel.com/new](https://vercel.com/new)
+2. Click **"Import Git Repository"** and select `Kostakurta8/aicademy`
+3. Vercel auto-detects Next.js — no config changes needed
+4. Add environment variable: `GROQ_API_KEY` = your key
+5. Click **Deploy** — you'll get a `.vercel.app` URL in ~2 minutes
 
-## Deploy on Vercel
+> The `vercel.json` in this repo sets the region to `fra1` (Frankfurt) and adds security headers.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deploy to Render
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Go to [render.com/new](https://dashboard.render.com/web/new)
+2. Connect your GitHub and select `Kostakurta8/aicademy`
+3. Render reads `render.yaml` automatically, or configure manually:
+   - **Runtime**: Node
+   - **Build Command**: `npm install && npm run build`
+   - **Start Command**: `npm start`
+4. Add environment variable: `GROQ_API_KEY` = your key
+5. Click **Create Web Service**
+
+## Project Structure
+
+```
+src/
+  app/           64 routes (pages, API, loading states)
+  components/    22 components (UI, layout, AI, onboarding)
+  data/          Static data (modules, games, prompting)
+  lib/           Utilities (AI client, sounds, rate limiter)
+  stores/        10 Zustand stores (XP, progress, AI, etc.)
+  types/         Type definitions
+  __tests__/     32 test cases
+```
+
+## License
+
+Private project.
