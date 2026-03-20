@@ -47,8 +47,8 @@ export default function InternalsPage() {
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-text-primary mb-2">AI Internals</h1>
-        <p className="text-text-secondary">See inside the machine — how AI models actually work under the hood.</p>
+        <h1 className="text-3xl font-bold text-text-primary mb-2">🔬 AI Internals</h1>
+        <p className="text-sm text-text-secondary">See how AI works inside!</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {tools.map((tool, idx) => (

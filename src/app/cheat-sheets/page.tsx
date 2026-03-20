@@ -79,8 +79,8 @@ export default function CheatSheetsPage() {
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-text-primary mb-2">Cheat Sheets</h1>
-        <p className="text-text-secondary">Quick reference cards for key AI concepts. Copy or download as needed.</p>
+        <h1 className="text-3xl font-bold text-text-primary mb-2">📋 Cheat Sheets</h1>
+        <p className="text-text-secondary text-sm">Quick cards for key AI concepts!</p>
       </div>
 
       <div className="relative mb-6">

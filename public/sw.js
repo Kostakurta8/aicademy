@@ -1,112 +1,114 @@
-const CACHE_VERSION = 'aicademy-v4'
-const STATIC_CACHE = `${CACHE_VERSION}-static`
-const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`
+const CACHE_VERSION = "aicademy-v4";
+const STATIC_CACHE = `${CACHE_VERSION}-static`;
+const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 
 /** Immutable build assets use content-hashed filenames (safe to cache forever) */
-const IMMUTABLE_RE = /\/_next\/static\/(css|media)\//
+const IMMUTABLE_RE = /\/_next\/static\/(css|media)\//;
 
 /** Patterns that should NEVER be intercepted */
-const BYPASS_RE = /(\/_next\/webpack-hmr|\/api\/|\.hot-update\.|__nextjs)/
+const BYPASS_RE = /(\/_next\/webpack-hmr|\/api\/|\.hot-update\.|__nextjs)/;
 
-self.addEventListener('install', () => {
+self.addEventListener("install", () => {
   // Skip precaching — let pages cache on first visit instead
-  self.skipWaiting()
-})
+  self.skipWaiting();
+});
 
-self.addEventListener('activate', (event) => {
+self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((k) => k !== STATIC_CACHE && k !== DYNAMIC_CACHE)
-          .map((k) => caches.delete(k))
-      )
-    )
-  )
-  self.clients.claim()
-})
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys
+            .filter((k) => k !== STATIC_CACHE && k !== DYNAMIC_CACHE)
+            .map((k) => caches.delete(k)),
+        ),
+      ),
+  );
+  self.clients.claim();
+});
 
-self.addEventListener('fetch', (event) => {
-  const { request } = event
+self.addEventListener("fetch", (event) => {
+  const { request } = event;
 
   // Only handle GET requests with http(s) scheme
-  if (request.method !== 'GET') return
-  const url = new URL(request.url)
-  if (url.protocol !== 'https:' && url.protocol !== 'http:') return
+  if (request.method !== "GET") return;
+  const url = new URL(request.url);
+  if (url.protocol !== "https:" && url.protocol !== "http:") return;
 
   // Never intercept dev tools, HMR, API, or hot-update requests
-  if (BYPASS_RE.test(url.pathname)) return
+  if (BYPASS_RE.test(url.pathname)) return;
 
   // Immutable assets (CSS, fonts, media) — content-hashed, cache-first
   if (IMMUTABLE_RE.test(url.pathname)) {
     event.respondWith(
       caches.match(request).then((cached) => {
-        if (cached) return cached
+        if (cached) return cached;
         return fetch(request).then((response) => {
           if (response.ok) {
-            const clone = response.clone()
-            caches.open(STATIC_CACHE).then((c) => c.put(request, clone))
+            const clone = response.clone();
+            caches.open(STATIC_CACHE).then((c) => c.put(request, clone));
           }
-          return response
-        })
-      })
-    )
-    return
+          return response;
+        });
+      }),
+    );
+    return;
   }
 
   // JS chunks — network-first (chunks can change between deploys)
-  if (url.pathname.startsWith('/_next/')) {
+  if (url.pathname.startsWith("/_next/")) {
     event.respondWith(
       fetch(request)
         .then((response) => {
           if (response.ok) {
-            const clone = response.clone()
-            caches.open(STATIC_CACHE).then((c) => c.put(request, clone))
+            const clone = response.clone();
+            caches.open(STATIC_CACHE).then((c) => c.put(request, clone));
           }
-          return response
+          return response;
         })
         .catch(() =>
-          caches.match(request).then((cached) => cached || Response.error())
-        )
-    )
-    return
+          caches.match(request).then((cached) => cached || Response.error()),
+        ),
+    );
+    return;
   }
 
   // Navigation & page requests — network-first with offline fallback
-  if (request.mode === 'navigate') {
+  if (request.mode === "navigate") {
     event.respondWith(
       fetch(request)
         .then((response) => {
           if (response.ok) {
-            const clone = response.clone()
-            caches.open(DYNAMIC_CACHE).then((c) => c.put(request, clone))
+            const clone = response.clone();
+            caches.open(DYNAMIC_CACHE).then((c) => c.put(request, clone));
           }
-          return response
+          return response;
         })
         .catch(() =>
-          caches.match(request).then((cached) => cached || Response.error())
-        )
-    )
+          caches.match(request).then((cached) => cached || Response.error()),
+        ),
+    );
   }
-})
+});
 
 // ── Push Notifications ──
-self.addEventListener('push', (event) => {
+self.addEventListener("push", (event) => {
   const defaults = {
-    title: 'AIcademy',
-    body: 'Time to learn something new!',
-    icon: '/icons/icon-192.png',
-    badge: '/icons/badge-72.png',
-    tag: 'aicademy-notification',
-    data: { url: '/' },
-  }
+    title: "AIcademy",
+    body: "Time to learn something new!",
+    icon: "/icons/icon-192.png",
+    badge: "/icons/badge-72.png",
+    tag: "aicademy-notification",
+    data: { url: "/" },
+  };
 
-  let payload = defaults
+  let payload = defaults;
   if (event.data) {
     try {
-      payload = { ...defaults, ...event.data.json() }
+      payload = { ...defaults, ...event.data.json() };
     } catch {
-      payload = { ...defaults, body: event.data.text() }
+      payload = { ...defaults, body: event.data.text() };
     }
   }
 
@@ -119,24 +121,26 @@ self.addEventListener('push', (event) => {
       data: payload.data,
       vibrate: [200, 100, 200],
       actions: [
-        { action: 'open', title: 'Open App' },
-        { action: 'dismiss', title: 'Dismiss' },
+        { action: "open", title: "Open App" },
+        { action: "dismiss", title: "Dismiss" },
       ],
-    })
-  )
-})
+    }),
+  );
+});
 
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close()
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
 
-  if (event.action === 'dismiss') return
+  if (event.action === "dismiss") return;
 
-  const url = event.notification.data?.url || '/'
+  const url = event.notification.data?.url || "/";
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
-      const existing = clients.find((c) => c.url.includes(url))
-      if (existing) return existing.focus()
-      return self.clients.openWindow(url)
-    })
-  )
-})
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clients) => {
+        const existing = clients.find((c) => c.url.includes(url));
+        if (existing) return existing.focus();
+        return self.clients.openWindow(url);
+      }),
+  );
+});

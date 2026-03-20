@@ -90,8 +90,8 @@ function AnalyticsContent() {
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-6">
       <div className="mb-8 animate-fade-in">
-        <h1 className="text-3xl font-bold text-text-primary mb-2">Progress Analytics</h1>
-        <p className="text-text-secondary">Track your learning journey, skill gaps, and mastery over time.</p>
+        <h1 className="text-3xl font-bold text-text-primary mb-2">📊 Your Progress</h1>
+        <p className="text-sm text-text-secondary">See how far you've come!</p>
       </div>
 
       {/* Top Stats Row */}

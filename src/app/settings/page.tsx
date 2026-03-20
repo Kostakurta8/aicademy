@@ -1,126 +1,167 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import Card from '@/components/ui/Card'
-import Button from '@/components/ui/Button'
-import Input from '@/components/ui/Input'
-import { useThemeStore } from '@/stores/theme-store'
-import { useUserStore } from '@/stores/user-store'
-import { useAIStore } from '@/stores/ai-store'
-import { checkAIHealth } from '@/lib/ai/groq-client'
-import { useSubscriptionStore } from '@/stores/subscription-store'
-import Link from 'next/link'
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import Input from "@/components/ui/Input";
+import { checkAIHealth } from "@/lib/ai/groq-client";
+import { useAIStore } from "@/stores/ai-store";
+import { useSubscriptionStore } from "@/stores/subscription-store";
+import { useThemeStore } from "@/stores/theme-store";
+import { useUserStore } from "@/stores/user-store";
 import {
-  Moon, Sun, Eye, Monitor,
-  User, Palette, Database, Cpu,
-  Download, Upload, Trash2, Check,
-  Wifi, WifiOff, RefreshCw,
-  Info, GraduationCap, Crown,
-} from 'lucide-react'
+    Check,
+    Cpu,
+    Crown,
+    Database,
+    Download,
+    Eye,
+    GraduationCap,
+    Info,
+    Monitor,
+    Moon,
+    Palette,
+    RefreshCw,
+    Sun,
+    Trash2,
+    Upload,
+    User,
+    Wifi,
+    WifiOff,
+} from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
 
 const themes = [
-  { id: 'dark', label: 'Dark', icon: Moon, desc: 'Easy on the eyes' },
-  { id: 'light', label: 'Light', icon: Sun, desc: 'Clean and bright' },
-  { id: 'high-contrast', label: 'High Contrast', icon: Eye, desc: 'Maximum accessibility' },
-  { id: 'system', label: 'System', icon: Monitor, desc: 'Match OS preference' },
-] as const
+  { id: "dark", label: "Dark", icon: Moon, desc: "Easy on the eyes" },
+  { id: "light", label: "Light", icon: Sun, desc: "Clean and bright" },
+  {
+    id: "high-contrast",
+    label: "High Contrast",
+    icon: Eye,
+    desc: "Maximum accessibility",
+  },
+  { id: "system", label: "System", icon: Monitor, desc: "Match OS preference" },
+] as const;
 
-const avatars = ['🧑‍💻', '👩‍🔬', '🧙‍♂️', '🤖', '🦊', '🐱', '🌟', '🎯']
+const avatars = ["🧑‍💻", "👩‍🔬", "🧙‍♂️", "🤖", "🦊", "🐱", "🌟", "🎯"];
 
 export default function SettingsPage() {
-  const theme = useThemeStore((s) => s.theme)
-  const setTheme = useThemeStore((s) => s.setTheme)
-  const userName = useUserStore((s) => s.name)
-  const setName = useUserStore((s) => s.setName)
-  const avatar = useUserStore((s) => s.avatar)
-  const setAvatar = useUserStore((s) => s.setAvatar)
-  const aiHealthy = useAIStore((s) => s.aiHealthy)
-  const installedModels = useAIStore((s) => s.installedModels)
-  const selectedModel = useAIStore((s) => s.selectedModel)
-  const setSelectedModel = useAIStore((s) => s.setSelectedModel)
-  const setAIHealth = useAIStore((s) => s.setAIHealth)
-  const selectedTrack = useUserStore((s) => s.selectedTrack)
-  const setSelectedTrack = useUserStore((s) => s.setSelectedTrack)
-  const soundEnabled = useUserStore((s) => s.soundEnabled)
-  const setSoundEnabled = useUserStore((s) => s.setSoundEnabled)
-  const plan = useSubscriptionStore((s) => s.plan)
+  const theme = useThemeStore((s) => s.theme);
+  const setTheme = useThemeStore((s) => s.setTheme);
+  const userName = useUserStore((s) => s.name);
+  const setName = useUserStore((s) => s.setName);
+  const avatar = useUserStore((s) => s.avatar);
+  const setAvatar = useUserStore((s) => s.setAvatar);
+  const aiHealthy = useAIStore((s) => s.aiHealthy);
+  const installedModels = useAIStore((s) => s.installedModels);
+  const selectedModel = useAIStore((s) => s.selectedModel);
+  const setSelectedModel = useAIStore((s) => s.setSelectedModel);
+  const setAIHealth = useAIStore((s) => s.setAIHealth);
+  const selectedTrack = useUserStore((s) => s.selectedTrack);
+  const setSelectedTrack = useUserStore((s) => s.setSelectedTrack);
+  const soundEnabled = useUserStore((s) => s.soundEnabled);
+  const setSoundEnabled = useUserStore((s) => s.setSoundEnabled);
+  const plan = useSubscriptionStore((s) => s.plan);
 
-  const [testingConnection, setTestingConnection] = useState(false)
-  const [testResult, setTestResult] = useState<string | null>(null)
-  const [confirmReset, setConfirmReset] = useState('')
-  const [exportDone, setExportDone] = useState(false)
+  const [testingConnection, setTestingConnection] = useState(false);
+  const [testResult, setTestResult] = useState<string | null>(null);
+  const [confirmReset, setConfirmReset] = useState("");
+  const [exportDone, setExportDone] = useState(false);
 
   const handleTestConnection = async () => {
-    setTestingConnection(true)
-    setTestResult(null)
-    const { healthy, models, error } = await checkAIHealth()
-    setAIHealth(healthy, models)
-    setTestResult(healthy ? `✅ Connected! ${models.length} model(s) available.` : `❌ ${error || 'Connection failed'}`)
-    setTestingConnection(false)
-  }
+    setTestingConnection(true);
+    setTestResult(null);
+    const { healthy, models, error } = await checkAIHealth();
+    setAIHealth(healthy, models);
+    setTestResult(
+      healthy
+        ? `✅ Connected! ${models.length} model(s) available.`
+        : `❌ ${error || "Connection failed"}`,
+    );
+    setTestingConnection(false);
+  };
 
   const handleExport = () => {
-    const data: Record<string, unknown> = {}
+    const data: Record<string, unknown> = {};
     for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i)
-      if (key?.startsWith('aicademy')) {
-        try { data[key] = JSON.parse(localStorage.getItem(key) || '') }
-        catch { data[key] = localStorage.getItem(key) }
+      const key = localStorage.key(i);
+      if (key?.startsWith("aicademy")) {
+        try {
+          data[key] = JSON.parse(localStorage.getItem(key) || "");
+        } catch {
+          data[key] = localStorage.getItem(key);
+        }
       }
     }
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `aicademy-backup-${new Date().toISOString().split('T')[0]}.json`
-    a.click()
-    URL.revokeObjectURL(url)
-    setExportDone(true)
-    setTimeout(() => setExportDone(false), 3000)
-  }
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `aicademy-backup-${new Date().toISOString().split("T")[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setExportDone(true);
+    setTimeout(() => setExportDone(false), 3000);
+  };
 
   const handleImport = () => {
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = '.json'
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
     input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0]
-      if (!file) return
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
       try {
-        const text = await file.text()
-        const data = JSON.parse(text)
+        const text = await file.text();
+        const data = JSON.parse(text);
         for (const [key, value] of Object.entries(data)) {
-          localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value))
+          localStorage.setItem(
+            key,
+            typeof value === "string" ? value : JSON.stringify(value),
+          );
         }
-        window.location.reload()
+        window.location.reload();
       } catch {
-        alert('Invalid backup file.')
+        alert("Invalid backup file.");
       }
-    }
-    input.click()
-  }
+    };
+    input.click();
+  };
 
   const handleReset = () => {
-    if (confirmReset !== 'RESET') return
-    localStorage.clear()
-    window.location.href = '/'
-  }
+    if (confirmReset !== "RESET") return;
+    localStorage.clear();
+    window.location.href = "/";
+  };
 
   return (
     <div className="p-6 md:p-8 max-w-3xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-text-primary mb-2">Settings</h1>
-        <p className="text-text-secondary">Customize your AIcademy experience.</p>
+        <p className="text-text-secondary">
+          Customize your AIcademy experience.
+        </p>
       </div>
 
       {/* Profile */}
       <section className="mb-8">
-        <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2"><User size={18} /> Profile</h2>
+        <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
+          <User size={18} /> Profile
+        </h2>
         <Card padding="md">
           <div className="space-y-4">
-            <Input label="Display Name" value={userName} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
+            <Input
+              label="Display Name"
+              value={userName}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Your name"
+            />
             <div>
-              <span className="text-sm font-medium text-text-secondary block mb-2">Avatar</span>
+              <span className="text-sm font-medium text-text-secondary block mb-2">
+                Avatar
+              </span>
               <div className="flex gap-2 flex-wrap">
                 {avatars.map((a) => (
                   <button
@@ -128,7 +169,9 @@ export default function SettingsPage() {
                     onClick={() => setAvatar(a)}
                     aria-label={`Select avatar ${a}`}
                     className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center transition-all cursor-pointer ${
-                      avatar === a ? 'ring-2 ring-accent bg-accent/10 scale-110' : 'bg-surface-raised hover:bg-border-subtle/30'
+                      avatar === a
+                        ? "ring-2 ring-accent bg-accent/10 scale-110"
+                        : "bg-surface-raised hover:bg-border-subtle/30"
                     }`}
                   >
                     {a}
@@ -142,27 +185,38 @@ export default function SettingsPage() {
 
       {/* Appearance */}
       <section className="mb-8">
-        <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2"><Palette size={18} /> Appearance</h2>
+        <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
+          <Palette size={18} /> Appearance
+        </h2>
         <Card padding="md">
           <div className="grid grid-cols-2 gap-3">
             {themes.map((t) => {
-              const Icon = t.icon
+              const Icon = t.icon;
               return (
                 <button
                   key={t.id}
                   onClick={() => setTheme(t.id)}
                   aria-label={`Switch to ${t.label} theme`}
                   className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
-                    theme === t.id ? 'border-accent bg-accent/10 ring-2 ring-accent' : 'border-border-subtle bg-surface-raised hover:border-accent/50'
+                    theme === t.id
+                      ? "border-accent bg-accent/10 ring-2 ring-accent"
+                      : "border-border-subtle bg-surface-raised hover:border-accent/50"
                   }`}
                 >
-                  <Icon size={18} className={theme === t.id ? 'text-accent' : 'text-text-muted'} />
+                  <Icon
+                    size={18}
+                    className={
+                      theme === t.id ? "text-accent" : "text-text-muted"
+                    }
+                  />
                   <div className="text-left">
-                    <p className="text-sm font-medium text-text-primary">{t.label}</p>
+                    <p className="text-sm font-medium text-text-primary">
+                      {t.label}
+                    </p>
                     <p className="text-xs text-text-muted">{t.desc}</p>
                   </div>
                 </button>
-              )
+              );
             })}
           </div>
         </Card>
@@ -170,19 +224,31 @@ export default function SettingsPage() {
 
       {/* AI Configuration */}
       <section className="mb-8">
-        <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2"><Cpu size={18} /> AI Configuration</h2>
+        <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
+          <Cpu size={18} /> AI Configuration
+        </h2>
         <Card padding="md">
           <div className="space-y-4">
             <div className="flex items-center gap-3 mb-2">
               {aiHealthy ? (
-                <span className="flex items-center gap-2 text-sm text-green"><Wifi size={14} /> Connected to Groq AI</span>
+                <span className="flex items-center gap-2 text-sm text-green">
+                  <Wifi size={14} /> Connected to Groq AI
+                </span>
               ) : (
-                <span className="flex items-center gap-2 text-sm text-text-muted"><WifiOff size={14} /> Checking connection...</span>
+                <span className="flex items-center gap-2 text-sm text-text-muted">
+                  <WifiOff size={14} /> Checking connection...
+                </span>
               )}
             </div>
 
             <div className="flex gap-2">
-              <Button onClick={handleTestConnection} loading={testingConnection} icon={<RefreshCw size={14} />} variant="secondary" size="sm">
+              <Button
+                onClick={handleTestConnection}
+                loading={testingConnection}
+                icon={<RefreshCw size={14} />}
+                variant="secondary"
+                size="sm"
+              >
                 Test Connection
               </Button>
             </div>
@@ -193,7 +259,9 @@ export default function SettingsPage() {
 
             {installedModels.length > 0 && (
               <div>
-                <span className="text-sm font-medium text-text-secondary block mb-2">Default Model</span>
+                <span className="text-sm font-medium text-text-secondary block mb-2">
+                  Default Model
+                </span>
                 <div className="flex flex-wrap gap-2">
                   {installedModels.map((m) => (
                     <button
@@ -201,7 +269,9 @@ export default function SettingsPage() {
                       onClick={() => setSelectedModel(m)}
                       aria-label={`Select model ${m}`}
                       className={`px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-colors ${
-                        selectedModel === m ? 'bg-accent text-white' : 'bg-surface-raised text-text-secondary hover:bg-border-subtle/30'
+                        selectedModel === m
+                          ? "bg-accent text-white"
+                          : "bg-surface-raised text-text-secondary hover:bg-border-subtle/30"
                       }`}
                     >
                       {m}
@@ -216,24 +286,45 @@ export default function SettingsPage() {
 
       {/* Learning Track */}
       <section className="mb-8">
-        <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2"><GraduationCap size={18} /> Learning Track</h2>
+        <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
+          <GraduationCap size={18} /> Learning Track
+        </h2>
         <Card padding="md">
-          <p className="text-sm text-text-secondary mb-3">Choose a track to customize your learning journey.</p>
+          <p className="text-sm text-text-secondary mb-3">
+            Choose a track to customize your learning journey.
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {[
-              { id: 'student', label: '🎓 Student', desc: 'New to AI — start with theory and foundations' },
-              { id: 'professional', label: '💼 Professional', desc: 'Apply AI in your work — focus on tools and ethics' },
-              { id: 'builder', label: '🛠️ Builder', desc: 'Build with AI — APIs, agents, and projects' },
-            ].map(track => (
-              <button key={track.id}
-                onClick={() => setSelectedTrack(selectedTrack === track.id ? null : track.id)}
+              {
+                id: "student",
+                label: "🎓 Student",
+                desc: "New to AI — start with theory and foundations",
+              },
+              {
+                id: "professional",
+                label: "💼 Professional",
+                desc: "Apply AI in your work — focus on tools and ethics",
+              },
+              {
+                id: "builder",
+                label: "🛠️ Builder",
+                desc: "Build with AI — APIs, agents, and projects",
+              },
+            ].map((track) => (
+              <button
+                key={track.id}
+                onClick={() =>
+                  setSelectedTrack(selectedTrack === track.id ? null : track.id)
+                }
                 className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                   selectedTrack === track.id
-                    ? 'border-accent bg-accent/10 ring-2 ring-accent'
-                    : 'border-border-subtle bg-surface-raised hover:border-accent/50'
+                    ? "border-accent bg-accent/10 ring-2 ring-accent"
+                    : "border-border-subtle bg-surface-raised hover:border-accent/50"
                 }`}
               >
-                <p className="text-sm font-medium text-text-primary">{track.label}</p>
+                <p className="text-sm font-medium text-text-primary">
+                  {track.label}
+                </p>
                 <p className="text-xs text-text-muted mt-1">{track.desc}</p>
               </button>
             ))}
@@ -243,19 +334,29 @@ export default function SettingsPage() {
 
       {/* Sound */}
       <section className="mb-8">
-        <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">🔊 Sound</h2>
+        <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
+          🔊 Sound
+        </h2>
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-text-primary">Sound Effects</p>
-              <p className="text-xs text-text-muted">XP dings, level-up sounds, and quiz feedback</p>
+              <p className="text-sm font-medium text-text-primary">
+                Sound Effects
+              </p>
+              <p className="text-xs text-text-muted">
+                XP dings, level-up sounds, and quiz feedback
+              </p>
             </div>
             <button
               onClick={() => setSoundEnabled(!soundEnabled)}
-              aria-label={soundEnabled ? 'Disable sound effects' : 'Enable sound effects'}
-              className={`w-12 h-6 rounded-full transition-colors cursor-pointer relative ${soundEnabled ? 'bg-accent' : 'bg-surface-raised border border-border-subtle'}`}
+              aria-label={
+                soundEnabled ? "Disable sound effects" : "Enable sound effects"
+              }
+              className={`w-12 h-6 rounded-full transition-colors cursor-pointer relative ${soundEnabled ? "bg-accent" : "bg-surface-raised border border-border-subtle"}`}
             >
-              <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all ${soundEnabled ? 'left-[26px]' : 'left-0.5'}`} />
+              <span
+                className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all ${soundEnabled ? "left-[26px]" : "left-0.5"}`}
+              />
             </button>
           </div>
         </Card>
@@ -263,14 +364,24 @@ export default function SettingsPage() {
 
       {/* Data Management */}
       <section className="mb-8">
-        <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2"><Database size={18} /> Data Management</h2>
+        <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
+          <Database size={18} /> Data Management
+        </h2>
         <Card padding="md">
           <div className="space-y-4">
             <div className="flex gap-3">
-              <Button onClick={handleExport} variant="secondary" icon={exportDone ? <Check size={14} /> : <Download size={14} />}>
-                {exportDone ? 'Exported!' : 'Export Backup'}
+              <Button
+                onClick={handleExport}
+                variant="secondary"
+                icon={exportDone ? <Check size={14} /> : <Download size={14} />}
+              >
+                {exportDone ? "Exported!" : "Export Backup"}
               </Button>
-              <Button onClick={handleImport} variant="secondary" icon={<Upload size={14} />}>
+              <Button
+                onClick={handleImport}
+                variant="secondary"
+                icon={<Upload size={14} />}
+              >
                 Import Backup
               </Button>
             </div>
@@ -279,8 +390,12 @@ export default function SettingsPage() {
               <div className="flex items-start gap-2 mb-3">
                 <Trash2 size={16} className="text-red shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-text-primary">Reset All Data</p>
-                  <p className="text-xs text-text-muted">This will delete all progress, settings, and conversations.</p>
+                  <p className="text-sm font-medium text-text-primary">
+                    Reset All Data
+                  </p>
+                  <p className="text-xs text-text-muted">
+                    This will delete all progress, settings, and conversations.
+                  </p>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -291,7 +406,12 @@ export default function SettingsPage() {
                   onChange={(e) => setConfirmReset(e.target.value)}
                   className="flex-1 px-3 py-2 rounded-xl bg-surface-raised border border-border-subtle text-text-primary text-sm outline-none focus:ring-2 focus:ring-red"
                 />
-                <Button variant="danger" size="sm" onClick={handleReset} disabled={confirmReset !== 'RESET'}>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={handleReset}
+                  disabled={confirmReset !== "RESET"}
+                >
                   Reset
                 </Button>
               </div>
@@ -302,20 +422,26 @@ export default function SettingsPage() {
 
       {/* Subscription */}
       <section className="mb-8">
-        <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2"><Crown size={18} /> Subscription</h2>
+        <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
+          <Crown size={18} /> Subscription
+        </h2>
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-text-primary">
-                {plan === 'pro' ? '✨ Pro Plan' : 'Free Plan'}
+                {plan === "pro" ? "✨ Pro Plan" : "Free Plan"}
               </p>
               <p className="text-xs text-text-muted">
-                {plan === 'pro' ? 'Unlimited AI messages and exclusive features' : '10 AI messages per day'}
+                {plan === "pro"
+                  ? "Unlimited AI messages and exclusive features"
+                  : "10 AI messages per day"}
               </p>
             </div>
-            {plan !== 'pro' && (
+            {plan !== "pro" && (
               <Link href="/pricing">
-                <Button size="sm" icon={<Crown size={14} />}>Upgrade to Pro</Button>
+                <Button size="sm" icon={<Crown size={14} />}>
+                  Upgrade to Pro
+                </Button>
               </Link>
             )}
           </div>
@@ -324,16 +450,25 @@ export default function SettingsPage() {
 
       {/* About */}
       <section>
-        <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2"><Info size={18} /> About</h2>
+        <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
+          <Info size={18} /> About
+        </h2>
         <Card padding="md">
           <div className="space-y-2 text-sm text-text-secondary">
-            <p><strong className="text-text-primary">AIcademy</strong> v0.1.0</p>
+            <p>
+              <strong className="text-text-primary">AIcademy</strong> v0.1.0
+            </p>
             <p>AI Literacy Learning Platform</p>
-            <p>Built with Next.js 16, Tailwind CSS 4, Zustand, Motion, and Groq AI.</p>
-            <p className="text-xs text-text-muted mt-3">© 2026 AIcademy. All rights reserved.</p>
+            <p>
+              Built with Next.js 16, Tailwind CSS 4, Zustand, Motion, and Groq
+              AI.
+            </p>
+            <p className="text-xs text-text-muted mt-3">
+              © 2026 AIcademy. All rights reserved.
+            </p>
           </div>
         </Card>
       </section>
     </div>
-  )
+  );
 }

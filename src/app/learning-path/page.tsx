@@ -23,8 +23,8 @@ export default function LearningPathPage() {
       <div className="flex items-center gap-4 mb-8">
         <Link href="/dashboard" className="text-text-muted hover:text-text-primary"><ArrowLeft size={20} /></Link>
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">Learning Path</h1>
-          <p className="text-text-secondary text-sm">Your journey through AI mastery, one module at a time.</p>
+          <h1 className="text-2xl font-bold text-text-primary">🚩 Learning Path</h1>
+          <p className="text-text-secondary text-sm">Follow the path, level up!</p>
         </div>
       </div>
       <ClientOnly fallback={<div className="space-y-8">{modules.map(m => <div key={m.slug} className="h-28 bg-surface rounded-xl" />)}</div>}>

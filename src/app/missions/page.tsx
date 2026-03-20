@@ -57,8 +57,8 @@ export default function MissionsPage() {
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-text-primary mb-2">Missions</h1>
-        <p className="text-text-secondary">Multi-step guided projects to put your skills to the test.</p>
+        <h1 className="text-3xl font-bold text-text-primary mb-2">🎯 Missions</h1>
+        <p className="text-text-secondary text-sm">Complete missions to prove your skills!</p>
       </div>
 
       <div className="space-y-4">

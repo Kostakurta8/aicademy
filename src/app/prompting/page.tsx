@@ -60,8 +60,8 @@ export default function PromptingPage() {
         <h1 className="text-4xl font-bold text-text-primary mb-2">
           Prompt <span className="bg-gradient-to-r from-violet-400 via-purple to-pink bg-clip-text text-transparent">Mastery</span>
         </h1>
-        <p className="text-text-secondary max-w-xl mx-auto mb-4">
-          Master the art of prompting Claude Opus 4.6 — from basics to advanced techniques.
+        <p className="text-sm text-text-secondary max-w-xl mx-auto mb-4">
+          Learn to talk to AI like a pro!
         </p>
 
         {/* Mastery Badge */}

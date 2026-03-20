@@ -31,9 +31,9 @@ export default function NotebookPage() {
     <div className="p-6 md:p-8 max-w-5xl mx-auto">
       <div className="animate-fade-in mb-6">
         <h1 className="text-2xl font-bold text-text-primary flex items-center gap-2 mb-1">
-          <PenLine size={24} className="text-accent" /> Notebook
+          <PenLine size={24} className="text-accent" /> 📔 Notebook
         </h1>
-        <p className="text-sm text-text-secondary">Your journal, bookmarks, and learning notes in one place.</p>
+        <p className="text-sm text-text-secondary">All your notes in one place!</p>
       </div>
 
       <div className="flex items-center gap-1 p-1 rounded-xl bg-surface-raised mb-6 max-w-xs">

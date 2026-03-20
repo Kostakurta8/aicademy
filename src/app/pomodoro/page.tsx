@@ -67,8 +67,8 @@ export default function PomodoroPage() {
   return (
     <div className="p-6 md:p-8 max-w-2xl mx-auto">
       <div className="mb-8 text-center animate-fade-in">
-        <h1 className="text-3xl font-bold text-text-primary mb-2">Focus Timer</h1>
-        <p className="text-text-secondary">Use the Pomodoro technique to stay focused while learning.</p>
+        <h1 className="text-3xl font-bold text-text-primary mb-2">⏰ Focus Timer</h1>
+        <p className="text-text-secondary text-sm">Stay focused while you learn!</p>
       </div>
 
       {/* Timer circle */}

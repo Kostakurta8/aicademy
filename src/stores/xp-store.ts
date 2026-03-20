@@ -1,68 +1,68 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-import { celebrate } from '@/lib/celebrate'
-import { hapticCelebrate } from '@/lib/sounds'
+import { celebrate } from "@/lib/celebrate";
+import { hapticCelebrate } from "@/lib/sounds";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 // Daily reward XP by consecutive day (cycles after 7)
-const DAILY_REWARDS = [10, 15, 20, 25, 30, 40, 50]
+const DAILY_REWARDS = [10, 15, 20, 25, 30, 40, 50];
 
 // Daily XP goal — clear target gives kids focus
-const DAILY_XP_GOAL = 50
+const DAILY_XP_GOAL = 50;
 
 interface XPStore {
-  totalXP: number
-  level: number
-  currentStreak: number
-  longestStreak: number
-  lastActivityDate: string
-  streakFreezes: number
-  streakFreezeEarned: number[]
-  xpHistory: Array<{ date: string; xp: number }>
-  streakHistory: string[]
-  totalLearningTime: number
-  lifetimeXPByModule: Record<string, number>
-  weeklyXPHistory: Array<{ week: string; xp: number }>
-  bestWeekXP: number
-  comebackBonusAvailable: boolean
-  lastDailyRewardDate: string
-  dailyRewardStreak: number
-  dailyXPEarned: number
-  dailyXPDate: string
-  dailyGoalCompleted: boolean
+  totalXP: number;
+  level: number;
+  currentStreak: number;
+  longestStreak: number;
+  lastActivityDate: string;
+  streakFreezes: number;
+  streakFreezeEarned: number[];
+  xpHistory: Array<{ date: string; xp: number }>;
+  streakHistory: string[];
+  totalLearningTime: number;
+  lifetimeXPByModule: Record<string, number>;
+  weeklyXPHistory: Array<{ week: string; xp: number }>;
+  bestWeekXP: number;
+  comebackBonusAvailable: boolean;
+  lastDailyRewardDate: string;
+  dailyRewardStreak: number;
+  dailyXPEarned: number;
+  dailyXPDate: string;
+  dailyGoalCompleted: boolean;
   // XP Boost
-  xpBoostMultiplier: number
-  xpBoostEndTime: number | null
+  xpBoostMultiplier: number;
+  xpBoostEndTime: number | null;
 
-  addXP: (amount: number, moduleId?: string) => void
-  checkStreak: () => void
-  recordActivity: () => void
-  useStreakFreeze: () => boolean
-  addLearningTime: (minutes: number) => void
-  canClaimDailyReward: () => boolean
-  claimDailyReward: () => number
-  getDailyRewardAmount: () => number
-  getDailyXPProgress: () => { earned: number; goal: number; percent: number }
-  activateXPBoost: (multiplier: number, durationMs: number) => void
-  getXPMultiplier: () => number
-  isBoostActive: () => boolean
-  getBoostTimeRemaining: () => number
+  addXP: (amount: number, moduleId?: string) => void;
+  checkStreak: () => void;
+  recordActivity: () => void;
+  useStreakFreeze: () => boolean;
+  addLearningTime: (minutes: number) => void;
+  canClaimDailyReward: () => boolean;
+  claimDailyReward: () => number;
+  getDailyRewardAmount: () => number;
+  getDailyXPProgress: () => { earned: number; goal: number; percent: number };
+  activateXPBoost: (multiplier: number, durationMs: number) => void;
+  getXPMultiplier: () => number;
+  isBoostActive: () => boolean;
+  getBoostTimeRemaining: () => number;
 }
 
 const XP_PER_LEVEL = [
-  0, 100, 250, 500, 800, 1200, 1700, 2300, 3000, 3800,
-  4700, 5700, 6800, 8000, 9300, 10700, 12200, 13800, 15500, 17300,
-  19200, 21200, 23300, 25500, 27800, 30200, 32700, 35300, 38000, 40800,
-]
+  0, 100, 250, 500, 800, 1200, 1700, 2300, 3000, 3800, 4700, 5700, 6800, 8000,
+  9300, 10700, 12200, 13800, 15500, 17300, 19200, 21200, 23300, 25500, 27800,
+  30200, 32700, 35300, 38000, 40800,
+];
 
 function getLevelForXP(xp: number): number {
   for (let i = XP_PER_LEVEL.length - 1; i >= 0; i--) {
-    if (xp >= XP_PER_LEVEL[i]) return i + 1
+    if (xp >= XP_PER_LEVEL[i]) return i + 1;
   }
-  return 1
+  return 1;
 }
 
 function getToday(): string {
-  return new Date().toISOString().split('T')[0]
+  return new Date().toISOString().split("T")[0];
 }
 
 export const useXPStore = create<XPStore>()(
@@ -72,7 +72,7 @@ export const useXPStore = create<XPStore>()(
       level: 1,
       currentStreak: 0,
       longestStreak: 0,
-      lastActivityDate: '',
+      lastActivityDate: "",
       streakFreezes: 0,
       streakFreezeEarned: [],
       xpHistory: [],
@@ -82,102 +82,155 @@ export const useXPStore = create<XPStore>()(
       weeklyXPHistory: [],
       bestWeekXP: 0,
       comebackBonusAvailable: false,
-      lastDailyRewardDate: '',
+      lastDailyRewardDate: "",
       dailyRewardStreak: 0,
       dailyXPEarned: 0,
-      dailyXPDate: '',
+      dailyXPDate: "",
       dailyGoalCompleted: false,
       xpBoostMultiplier: 1,
       xpBoostEndTime: null,
 
       addXP: (amount, moduleId) => {
-        const oldLevel = get().level
+        const oldLevel = get().level;
         // Apply XP boost multiplier
-        const multiplier = get().getXPMultiplier()
-        const boostedAmount = Math.round(amount * multiplier)
+        const multiplier = get().getXPMultiplier();
+        const boostedAmount = Math.round(amount * multiplier);
         set((s) => {
-          const newXP = s.totalXP + boostedAmount
-          const newLevel = getLevelForXP(newXP)
-          const today = getToday()
-          const existingEntry = s.xpHistory.find((e) => e.date === today)
+          const newXP = s.totalXP + boostedAmount;
+          const newLevel = getLevelForXP(newXP);
+          const today = getToday();
+          const existingEntry = s.xpHistory.find((e) => e.date === today);
           const xpHistory = existingEntry
-            ? s.xpHistory.map((e) => (e.date === today ? { ...e, xp: e.xp + boostedAmount } : e))
-            : [...s.xpHistory.slice(-89), { date: today, xp: boostedAmount }]
+            ? s.xpHistory.map((e) =>
+                e.date === today ? { ...e, xp: e.xp + boostedAmount } : e,
+              )
+            : [...s.xpHistory.slice(-89), { date: today, xp: boostedAmount }];
           const lifetimeXPByModule = moduleId
-            ? { ...s.lifetimeXPByModule, [moduleId]: (s.lifetimeXPByModule[moduleId] || 0) + boostedAmount }
-            : s.lifetimeXPByModule
+            ? {
+                ...s.lifetimeXPByModule,
+                [moduleId]:
+                  (s.lifetimeXPByModule[moduleId] || 0) + boostedAmount,
+              }
+            : s.lifetimeXPByModule;
 
           // Daily goal tracking
-          const dailyXPDate = s.dailyXPDate === today ? s.dailyXPDate : today
-          const dailyXPEarned = s.dailyXPDate === today ? s.dailyXPEarned + boostedAmount : boostedAmount
-          const dailyGoalCompleted = dailyXPEarned >= DAILY_XP_GOAL
+          const dailyXPDate = s.dailyXPDate === today ? s.dailyXPDate : today;
+          const dailyXPEarned =
+            s.dailyXPDate === today
+              ? s.dailyXPEarned + boostedAmount
+              : boostedAmount;
+          const dailyGoalCompleted = dailyXPEarned >= DAILY_XP_GOAL;
 
-          return { totalXP: newXP, level: newLevel, xpHistory, lifetimeXPByModule, dailyXPEarned, dailyXPDate, dailyGoalCompleted }
-        })
-        const newLevel = get().level
+          return {
+            totalXP: newXP,
+            level: newLevel,
+            xpHistory,
+            lifetimeXPByModule,
+            dailyXPEarned,
+            dailyXPDate,
+            dailyGoalCompleted,
+          };
+        });
+        const newLevel = get().level;
         if (newLevel > oldLevel) {
-          hapticCelebrate()
-          celebrate({ type: 'level-up', title: `Level ${newLevel}!`, subtitle: 'You reached a new level!', value: `Level ${newLevel}` })
+          hapticCelebrate();
+          celebrate({
+            type: "level-up",
+            title: `Level ${newLevel}!`,
+            subtitle: "You reached a new level!",
+            value: `Level ${newLevel}`,
+          });
         }
         // Celebrate daily goal completion
-        const state = get()
-        if (state.dailyGoalCompleted && state.dailyXPEarned - boostedAmount < DAILY_XP_GOAL) {
-          hapticCelebrate()
-          celebrate({ type: 'achievement', title: 'Daily Goal! 🎯', subtitle: `You earned ${DAILY_XP_GOAL} XP today!`, value: '🏆 Goal Complete' })
+        const state = get();
+        if (
+          state.dailyGoalCompleted &&
+          state.dailyXPEarned - boostedAmount < DAILY_XP_GOAL
+        ) {
+          hapticCelebrate();
+          celebrate({
+            type: "achievement",
+            title: "Daily Goal! 🎯",
+            subtitle: `You earned ${DAILY_XP_GOAL} XP today!`,
+            value: "🏆 Goal Complete",
+          });
         }
       },
 
       checkStreak: () => {
-        const { lastActivityDate, currentStreak } = get()
-        const today = getToday()
-        if (lastActivityDate === today) return
-        const yesterday = new Date()
-        yesterday.setDate(yesterday.getDate() - 1)
-        const yesterdayStr = yesterday.toISOString().split('T')[0]
-        if (lastActivityDate === yesterdayStr) return
-        const lastDate = new Date(lastActivityDate)
-        const daysSince = Math.floor((Date.now() - lastDate.getTime()) / 86400000)
+        const { lastActivityDate, currentStreak } = get();
+        const today = getToday();
+        if (lastActivityDate === today) return;
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split("T")[0];
+        if (lastActivityDate === yesterdayStr) return;
+        const lastDate = new Date(lastActivityDate);
+        const daysSince = Math.floor(
+          (Date.now() - lastDate.getTime()) / 86400000,
+        );
         if (daysSince >= 3) {
-          set({ comebackBonusAvailable: true })
+          set({ comebackBonusAvailable: true });
         }
         if (daysSince > 1 && currentStreak > 0) {
-          const { streakFreezes } = get()
+          const { streakFreezes } = get();
           if (streakFreezes > 0) {
-            set((s) => ({ streakFreezes: s.streakFreezes - 1 }))
+            set((s) => ({ streakFreezes: s.streakFreezes - 1 }));
           } else {
-            set({ currentStreak: 0 })
+            set({ currentStreak: 0 });
           }
         }
       },
 
       recordActivity: () => {
-        const { lastActivityDate, currentStreak, longestStreak, streakHistory } = get()
-        const today = getToday()
-        if (lastActivityDate === today) return
-        const yesterday = new Date()
-        yesterday.setDate(yesterday.getDate() - 1)
-        const yesterdayStr = yesterday.toISOString().split('T')[0]
-        const newStreak = lastActivityDate === yesterdayStr ? currentStreak + 1 : 1
-        const newLongest = Math.max(newStreak, longestStreak)
-        let newFreezes = get().streakFreezes
-        const earned = get().streakFreezeEarned
+        const {
+          lastActivityDate,
+          currentStreak,
+          longestStreak,
+          streakHistory,
+        } = get();
+        const today = getToday();
+        if (lastActivityDate === today) return;
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split("T")[0];
+        const newStreak =
+          lastActivityDate === yesterdayStr ? currentStreak + 1 : 1;
+        const newLongest = Math.max(newStreak, longestStreak);
+        let newFreezes = get().streakFreezes;
+        const earned = get().streakFreezeEarned;
         if (newStreak === 7 && !earned.includes(7)) {
-          newFreezes = Math.min(newFreezes + 1, 3)
-          earned.push(7)
-          celebrate({ type: 'streak', title: '7 Day Streak!', subtitle: 'Streak freeze earned!', value: '🔥 7 days' })
-          hapticCelebrate()
+          newFreezes = Math.min(newFreezes + 1, 3);
+          earned.push(7);
+          celebrate({
+            type: "streak",
+            title: "7 Day Streak!",
+            subtitle: "Streak freeze earned!",
+            value: "🔥 7 days",
+          });
+          hapticCelebrate();
         }
         if (newStreak === 30 && !earned.includes(30)) {
-          newFreezes = Math.min(newFreezes + 1, 3)
-          earned.push(30)
-          celebrate({ type: 'streak', title: '30 Day Streak!', subtitle: 'Another streak freeze earned!', value: '🔥 30 days' })
-          hapticCelebrate()
+          newFreezes = Math.min(newFreezes + 1, 3);
+          earned.push(30);
+          celebrate({
+            type: "streak",
+            title: "30 Day Streak!",
+            subtitle: "Another streak freeze earned!",
+            value: "🔥 30 days",
+          });
+          hapticCelebrate();
         }
         if (newStreak === 90 && !earned.includes(90)) {
-          newFreezes = Math.min(newFreezes + 1, 3)
-          earned.push(90)
-          celebrate({ type: 'streak', title: '90 Day Streak!', subtitle: 'Ultimate streak freeze earned!', value: '🔥 90 days' })
-          hapticCelebrate()
+          newFreezes = Math.min(newFreezes + 1, 3);
+          earned.push(90);
+          celebrate({
+            type: "streak",
+            title: "90 Day Streak!",
+            subtitle: "Ultimate streak freeze earned!",
+            value: "🔥 90 days",
+          });
+          hapticCelebrate();
         }
         set({
           lastActivityDate: today,
@@ -186,86 +239,102 @@ export const useXPStore = create<XPStore>()(
           streakHistory: [...streakHistory.slice(-365), today],
           streakFreezes: newFreezes,
           streakFreezeEarned: earned,
-        })
+        });
       },
 
       useStreakFreeze: () => {
-        const { streakFreezes } = get()
-        if (streakFreezes <= 0) return false
-        set((s) => ({ streakFreezes: s.streakFreezes - 1 }))
-        return true
+        const { streakFreezes } = get();
+        if (streakFreezes <= 0) return false;
+        set((s) => ({ streakFreezes: s.streakFreezes - 1 }));
+        return true;
       },
 
       canClaimDailyReward: () => {
-        return get().lastDailyRewardDate !== getToday()
+        return get().lastDailyRewardDate !== getToday();
       },
 
       getDailyRewardAmount: () => {
-        const { dailyRewardStreak } = get()
-        return DAILY_REWARDS[dailyRewardStreak % DAILY_REWARDS.length]
+        const { dailyRewardStreak } = get();
+        return DAILY_REWARDS[dailyRewardStreak % DAILY_REWARDS.length];
       },
 
       claimDailyReward: () => {
-        const state = get()
-        const today = getToday()
-        if (state.lastDailyRewardDate === today) return 0
+        const state = get();
+        const today = getToday();
+        if (state.lastDailyRewardDate === today) return 0;
 
-        const yesterday = new Date()
-        yesterday.setDate(yesterday.getDate() - 1)
-        const yesterdayStr = yesterday.toISOString().split('T')[0]
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split("T")[0];
 
-        const newRewardStreak = state.lastDailyRewardDate === yesterdayStr
-          ? state.dailyRewardStreak + 1
-          : 0
-        const reward = DAILY_REWARDS[newRewardStreak % DAILY_REWARDS.length]
+        const newRewardStreak =
+          state.lastDailyRewardDate === yesterdayStr
+            ? state.dailyRewardStreak + 1
+            : 0;
+        const reward = DAILY_REWARDS[newRewardStreak % DAILY_REWARDS.length];
 
-        set({ lastDailyRewardDate: today, dailyRewardStreak: newRewardStreak })
-        get().addXP(reward)
-        hapticCelebrate()
-        celebrate({ type: 'achievement', title: 'Daily Reward!', subtitle: `Day ${newRewardStreak + 1} streak`, value: `+${reward} XP` })
-        return reward
+        set({ lastDailyRewardDate: today, dailyRewardStreak: newRewardStreak });
+        get().addXP(reward);
+        hapticCelebrate();
+        celebrate({
+          type: "achievement",
+          title: "Daily Reward!",
+          subtitle: `Day ${newRewardStreak + 1} streak`,
+          value: `+${reward} XP`,
+        });
+        return reward;
       },
 
       addLearningTime: (minutes) => {
-        set((s) => ({ totalLearningTime: s.totalLearningTime + minutes }))
+        set((s) => ({ totalLearningTime: s.totalLearningTime + minutes }));
       },
 
       getDailyXPProgress: () => {
-        const { dailyXPEarned, dailyXPDate } = get()
-        const today = getToday()
-        const earned = dailyXPDate === today ? dailyXPEarned : 0
-        return { earned, goal: DAILY_XP_GOAL, percent: Math.min((earned / DAILY_XP_GOAL) * 100, 100) }
+        const { dailyXPEarned, dailyXPDate } = get();
+        const today = getToday();
+        const earned = dailyXPDate === today ? dailyXPEarned : 0;
+        return {
+          earned,
+          goal: DAILY_XP_GOAL,
+          percent: Math.min((earned / DAILY_XP_GOAL) * 100, 100),
+        };
       },
 
       activateXPBoost: (multiplier, durationMs) => {
-        const endTime = Date.now() + durationMs
-        set({ xpBoostMultiplier: multiplier, xpBoostEndTime: endTime })
-        celebrate({ type: 'achievement', title: `${multiplier}x XP Boost! ⚡`, subtitle: `Active for ${Math.round(durationMs / 60000)} minutes`, value: `${multiplier}x XP` })
-        hapticCelebrate()
+        const endTime = Date.now() + durationMs;
+        set({ xpBoostMultiplier: multiplier, xpBoostEndTime: endTime });
+        celebrate({
+          type: "achievement",
+          title: `${multiplier}x XP Boost! ⚡`,
+          subtitle: `Active for ${Math.round(durationMs / 60000)} minutes`,
+          value: `${multiplier}x XP`,
+        });
+        hapticCelebrate();
       },
 
       getXPMultiplier: () => {
-        const { xpBoostMultiplier, xpBoostEndTime } = get()
+        const { xpBoostMultiplier, xpBoostEndTime } = get();
         if (!xpBoostEndTime || Date.now() >= xpBoostEndTime) {
-          if (xpBoostEndTime) set({ xpBoostMultiplier: 1, xpBoostEndTime: null })
-          return 1
+          if (xpBoostEndTime)
+            set({ xpBoostMultiplier: 1, xpBoostEndTime: null });
+          return 1;
         }
-        return xpBoostMultiplier
+        return xpBoostMultiplier;
       },
 
       isBoostActive: () => {
-        const { xpBoostEndTime } = get()
-        return !!xpBoostEndTime && Date.now() < xpBoostEndTime
+        const { xpBoostEndTime } = get();
+        return !!xpBoostEndTime && Date.now() < xpBoostEndTime;
       },
 
       getBoostTimeRemaining: () => {
-        const { xpBoostEndTime } = get()
-        if (!xpBoostEndTime) return 0
-        return Math.max(0, xpBoostEndTime - Date.now())
+        const { xpBoostEndTime } = get();
+        if (!xpBoostEndTime) return 0;
+        return Math.max(0, xpBoostEndTime - Date.now());
       },
     }),
-    { name: 'aicademy-xp', skipHydration: true }
-  )
-)
+    { name: "aicademy-xp", skipHydration: true },
+  ),
+);
 
-export { XP_PER_LEVEL, getLevelForXP, DAILY_REWARDS, DAILY_XP_GOAL }
+export { DAILY_REWARDS, DAILY_XP_GOAL, getLevelForXP, XP_PER_LEVEL };

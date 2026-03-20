@@ -54,8 +54,8 @@ function JournalContent() {
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto">
       <div className="mb-6 animate-fade-in">
-        <h1 className="text-3xl font-bold text-text-primary mb-2">Learning Journal</h1>
-        <p className="text-text-secondary">Reflect on what you&apos;ve learned. Personal notes, insights, and breakthroughs.</p>
+        <h1 className="text-3xl font-bold text-text-primary mb-2">📓 My Journal</h1>
+        <p className="text-text-secondary text-sm">Write about what you learned!</p>
       </div>
 
       <div className="flex gap-3 mb-6">
