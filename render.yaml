@@ -1,0 +1,13 @@
+services:
+  - type: web
+    runtime: node
+    name: aicademy
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: NODE_ENV
+        value: production
+    healthCheckPath: /api/ai/models
