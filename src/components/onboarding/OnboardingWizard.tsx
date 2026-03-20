@@ -10,9 +10,6 @@ import {
   Sparkles,
   ArrowRight,
   ArrowLeft,
-  GraduationCap,
-  Briefcase,
-  Wrench,
   User,
   Palette,
   Check,
@@ -34,33 +31,6 @@ const avatars = [
   { id: 'phoenix', emoji: '🦅', label: 'Phoenix' },
 ]
 
-const tracks = [
-  {
-    id: 'student',
-    title: 'Student',
-    description: 'I\'m learning about AI for the first time. Start from the basics.',
-    icon: GraduationCap,
-    color: 'from-blue to-cyan',
-    recommended: ['Foundations of AI', 'Prompt Engineering', 'Ethics'],
-  },
-  {
-    id: 'professional',
-    title: 'Professional',
-    description: 'I want to use AI tools effectively in my work and career.',
-    icon: Briefcase,
-    color: 'from-purple to-pink',
-    recommended: ['AI Tools Ecosystem', 'Real-World Projects', 'Building with APIs'],
-  },
-  {
-    id: 'builder',
-    title: 'Builder',
-    description: 'I want to build AI-powered applications and integrate APIs.',
-    icon: Wrench,
-    color: 'from-orange to-red',
-    recommended: ['Building with APIs', 'Agents & Automation', 'Image/Video/Audio'],
-  },
-]
-
 const features = [
   { icon: BookOpen, title: '8 Learning Modules', desc: 'Structured lessons from beginner to advanced' },
   { icon: Gamepad2, title: '13 Educational Games', desc: 'Learn through play — earn XP and level up' },
@@ -72,7 +42,6 @@ export default function OnboardingWizard() {
   const [step, setStep] = useState(0)
   const [name, setName] = useState('')
   const [selectedAvatar, setSelectedAvatar] = useState('explorer')
-  const [selectedTrack, setSelectedTrack] = useState<string | null>(null)
   const [selectedLevel, setSelectedLevel] = useState<'newbie' | 'master' | null>(null)
   const [completing, setCompleting] = useState(false)
 
@@ -82,13 +51,13 @@ export default function OnboardingWizard() {
   const setOnboardingComplete = useUserStore((s) => s.setOnboardingComplete)
   const setExperienceLevel = useUserStore((s) => s.setExperienceLevel)
 
-  const totalSteps = 5
+  const totalSteps = 4
 
   const handleComplete = () => {
     setCompleting(true)
     setUserName(name.trim() || 'Explorer')
     setUserAvatar(selectedAvatar)
-    setUserTrack(selectedTrack)
+    setUserTrack('student')
     if (selectedLevel) setExperienceLevel(selectedLevel)
     useXPStore.getState().addXP(50)
     playXPDing()
@@ -101,8 +70,7 @@ export default function OnboardingWizard() {
 
   const canProceed = () => {
     if (step === 1) return name.trim().length > 0
-    if (step === 3) return selectedTrack !== null
-    if (step === 4) return selectedLevel !== null
+    if (step === 3) return selectedLevel !== null
     return true
   }
 
@@ -255,67 +223,8 @@ export default function OnboardingWizard() {
             </div>
           )}
 
-          {/* Step 3: Learning Track */}
+          {/* Step 3: Experience Level */}
           {step === 3 && !completing && (
-            <div
-              key="track"
-              className="animate-fade-in text-center"
-            >
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-orange to-red flex items-center justify-center">
-                <Rocket size={32} className="text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-text-primary mb-2">Choose Your Path</h2>
-              <p className="text-text-secondary mb-8">This helps us recommend the right content. You can switch anytime.</p>
-
-              <div className="space-y-4 max-w-lg mx-auto">
-                {tracks.map((track, i) => (
-                  <div
-                    key={track.id}
-                    className="animate-fade-in"
-                    style={{ animationDelay: `${i * 0.1}s` }}
-                  >
-                    <button
-                      onClick={() => setSelectedTrack(track.id)}
-                      className={`
-                        w-full text-left p-5 rounded-2xl border-2 transition-all cursor-pointer
-                        ${selectedTrack === track.id
-                          ? 'border-accent bg-accent/5 shadow-lg shadow-accent/10'
-                          : 'border-border-subtle bg-surface hover:border-accent/30'
-                        }
-                      `}
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${track.color} flex items-center justify-center shrink-0`}>
-                          <track.icon size={24} className="text-white" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <h3 className="font-bold text-text-primary text-lg">{track.title}</h3>
-                            {selectedTrack === track.id && (
-                              <div className="animate-celebrate-pop">
-                                <Check size={20} className="text-accent" />
-                              </div>
-                            )}
-                          </div>
-                          <p className="text-sm text-text-secondary mt-1">{track.description}</p>
-                          <div className="flex flex-wrap gap-1.5 mt-3">
-                            {track.recommended.map((mod) => (
-                              <span key={mod} className="text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent">
-                                {mod}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Step 4: Experience Level */}
-          {step === 4 && !completing && (
             <div
               key="level"
               className="animate-fade-in text-center"

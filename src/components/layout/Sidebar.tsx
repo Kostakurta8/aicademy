@@ -21,6 +21,8 @@ import {
   Star,
   Compass,
   Play,
+  Trophy,
+  Crown,
 } from 'lucide-react'
 
 // Simplified: 5 primary + 3 secondary = 8 total (down from 11)
@@ -34,7 +36,9 @@ const primaryNav = [
 
 const exploreNav = [
   { href: '/sandbox', label: 'Sandbox', icon: Compass },
+  { href: '/challenges', label: 'Challenges', icon: Trophy },
   { href: '/flashcards', label: 'Cards', icon: Play },
+  { href: '/pricing', label: 'Pro', icon: Crown },
   { href: '/settings', label: 'Settings', icon: Settings },
 ]
 

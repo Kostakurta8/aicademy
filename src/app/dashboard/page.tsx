@@ -7,7 +7,9 @@ import ClientOnly from '@/components/ui/ClientOnly'
 import { useUserStore } from '@/stores/user-store'
 import { useXPStore, XP_PER_LEVEL, DAILY_REWARDS, DAILY_XP_GOAL } from '@/stores/xp-store'
 import { useProgressStore } from '@/stores/progress-store'
+import { useAchievementStore, type AchievementStats } from '@/stores/achievement-store'
 import { hapticTap } from '@/lib/sounds'
+import { useEffect } from 'react'
 import {
   Flame,
   Star,
@@ -23,6 +25,8 @@ import {
   Gift,
   Zap,
   Play,
+  Medal,
+  PartyPopper,
 } from 'lucide-react'
 import { learningPath, TOTAL_LESSONS, quickActions } from '@/data/modules'
 
@@ -34,6 +38,11 @@ export default function DashboardPage() {
         <HeroRow />
       </ClientOnly>
 
+      {/* Comeback Bonus — shown when user returns after 3+ days */}
+      <ClientOnly fallback={null}>
+        <ComebackBonus />
+      </ClientOnly>
+
       {/* Row 2: HERO Continue Card — THE primary action, big and unmissable */}
       <ClientOnly fallback={<div className="h-32" />}>
         <HeroContinueCard />
@@ -43,6 +52,16 @@ export default function DashboardPage() {
       <ClientOnly fallback={<div className="h-16" />}>
         <DailyRewardCard />
       </ClientOnly>
+
+      {/* Row 3.5: Streak Calendar + Achievements */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <ClientOnly fallback={<div className="h-28" />}>
+          <StreakCalendar />
+        </ClientOnly>
+        <ClientOnly fallback={<div className="h-28" />}>
+          <AchievementShowcase />
+        </ClientOnly>
+      </div>
 
       {/* Row 4: Quick Actions — 4 big tap targets */}
       <div className="grid grid-cols-4 gap-2 md:gap-3 animate-fade-in">
@@ -66,6 +85,11 @@ export default function DashboardPage() {
       {/* Row 6: Daily Tip — subtle, at the bottom */}
       <ClientOnly fallback={<div className="h-12" />}>
         <DailyTip />
+      </ClientOnly>
+
+      {/* Achievement checker — runs on mount */}
+      <ClientOnly fallback={null}>
+        <AchievementChecker />
       </ClientOnly>
     </div>
   )
@@ -464,6 +488,207 @@ function getGreeting() {
   if (h < 12) return 'Good morning'
   if (h < 18) return 'Good afternoon'
   return 'Good evening'
+}
+
+/* ═══════════════════════════════════════
+   ComebackBonus — shown when user returns after 3+ days
+   ═══════════════════════════════════════ */
+function ComebackBonus() {
+  const comebackAvailable = useXPStore((s) => s.comebackBonusAvailable)
+  const addXP = useXPStore((s) => s.addXP)
+  const streak = useXPStore((s) => s.currentStreak)
+
+  if (!comebackAvailable) return null
+
+  const bonusXP = 75
+
+  return (
+    <div className="animate-slide-up">
+      <Card padding="md" glow className="relative overflow-hidden border-2 border-green/30">
+        <div className="absolute inset-0 bg-gradient-to-r from-green/5 via-blue/5 to-green/5 pointer-events-none" />
+        <div className="flex items-center gap-4 relative z-10">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-green to-blue flex items-center justify-center shrink-0 animate-wiggle">
+            <PartyPopper size={28} className="text-white" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-base font-black text-text-primary">Welcome Back! 🎉</h3>
+            <p className="text-xs text-text-secondary mt-0.5">We missed you! Here&apos;s a bonus to get you started.</p>
+          </div>
+          <button
+            onClick={() => {
+              hapticTap()
+              addXP(bonusXP)
+              useXPStore.setState({ comebackBonusAvailable: false })
+            }}
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-green to-blue text-white text-sm font-bold tap-bounce hover:brightness-110 transition-all animate-pulse-glow shrink-0"
+          >
+            +{bonusXP} XP
+          </button>
+        </div>
+      </Card>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════
+   StreakCalendar — visual "don't break the chain" 
+   Shows last 28 days of activity
+   ═══════════════════════════════════════ */
+function StreakCalendar() {
+  const streakHistory = useXPStore((s) => s.streakHistory)
+  const currentStreak = useXPStore((s) => s.currentStreak)
+  const longestStreak = useXPStore((s) => s.longestStreak)
+
+  // Generate last 28 days
+  const days: { date: string; active: boolean; isToday: boolean }[] = []
+  const today = new Date()
+  for (let i = 27; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(d.getDate() - i)
+    const dateStr = d.toISOString().split('T')[0]
+    days.push({
+      date: dateStr,
+      active: streakHistory.includes(dateStr),
+      isToday: i === 0,
+    })
+  }
+
+  return (
+    <div className="animate-fade-in">
+      <Card padding="md">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-xs font-bold text-text-primary flex items-center gap-1.5">
+            <Flame size={14} className="text-orange" /> Activity
+          </h3>
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] text-text-muted">Current <span className="font-bold text-orange">{currentStreak}</span></span>
+            <span className="text-[10px] text-text-muted">Best <span className="font-bold text-gold">{longestStreak}</span></span>
+          </div>
+        </div>
+        <div className="grid grid-cols-7 gap-1">
+          {days.map((day) => (
+            <div
+              key={day.date}
+              className={`aspect-square rounded-sm transition-all ${
+                day.active
+                  ? 'bg-green'
+                  : day.isToday
+                  ? 'bg-accent/20 border border-accent/40'
+                  : 'bg-border-subtle/30'
+              }`}
+              title={`${day.date}${day.active ? ' — Active' : ''}`}
+            />
+          ))}
+        </div>
+        <div className="flex items-center justify-between mt-2">
+          <span className="text-[9px] text-text-muted">4 weeks ago</span>
+          <span className="text-[9px] text-text-muted">Today</span>
+        </div>
+      </Card>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════
+   AchievementShowcase — latest badges
+   ═══════════════════════════════════════ */
+function AchievementShowcase() {
+  const getAll = useAchievementStore((s) => s.getAll)
+  const getProgress = useAchievementStore((s) => s.getProgress)
+  const achievements = getAll()
+  const { unlocked, total, percent } = getProgress()
+
+  const unlockedAchievements = achievements.filter(a => a.unlocked)
+  const lockedPreview = achievements.filter(a => !a.unlocked).slice(0, 3)
+
+  return (
+    <div className="animate-fade-in">
+      <Card padding="md">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-xs font-bold text-text-primary flex items-center gap-1.5">
+            <Medal size={14} className="text-gold" /> Achievements
+          </h3>
+          <span className="text-[10px] font-bold text-accent">{unlocked}/{total}</span>
+        </div>
+
+        {/* Progress bar */}
+        <div className="w-full h-1.5 rounded-full bg-border-subtle overflow-hidden mb-2">
+          <div className="h-full rounded-full bg-gradient-to-r from-gold to-orange transition-all" style={{ width: `${percent}%` }} />
+        </div>
+
+        {/* Badge grid — show up to 8 badges */}
+        <div className="flex flex-wrap gap-1.5">
+          {unlockedAchievements.slice(-5).map(a => (
+            <div
+              key={a.id}
+              className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center"
+              title={`${a.title}: ${a.description}`}
+            >
+              <span className="text-sm">{a.emoji}</span>
+            </div>
+          ))}
+          {lockedPreview.map(a => (
+            <div
+              key={a.id}
+              className="w-8 h-8 rounded-lg bg-surface-raised border border-border-subtle flex items-center justify-center opacity-30"
+              title={`??? — ${a.description}`}
+            >
+              <span className="text-sm grayscale">🔒</span>
+            </div>
+          ))}
+        </div>
+
+        {unlocked === 0 && (
+          <p className="text-[10px] text-text-muted text-center mt-1">Complete lessons to unlock badges!</p>
+        )}
+      </Card>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════
+   AchievementChecker — invisible component that 
+   checks and unlocks achievements on mount
+   ═══════════════════════════════════════ */
+function AchievementChecker() {
+  const totalXP = useXPStore((s) => s.totalXP)
+  const currentStreak = useXPStore((s) => s.currentStreak)
+  const comebackBonusAvailable = useXPStore((s) => s.comebackBonusAvailable)
+  const dailyGoalCompleted = useXPStore((s) => s.dailyGoalCompleted)
+  const moduleProgress = useProgressStore((s) => s.moduleProgress)
+  const completedChallenges = useProgressStore((s) => s.completedChallenges)
+  const checkAchievements = useAchievementStore((s) => s.checkAchievements)
+  const incrementDailyGoalCount = useAchievementStore((s) => s.incrementDailyGoalCount)
+
+  // Calculate stats
+  const totalLessons = Object.values(moduleProgress).reduce(
+    (sum, mod) => sum + (mod.completedLessons?.length || 0), 0
+  )
+  const completedModules = learningPath.filter(m => {
+    const done = moduleProgress[m.slug]?.completedLessons?.length || 0
+    return done >= m.totalLessons
+  }).length
+
+  useEffect(() => {
+    const stats: AchievementStats = {
+      totalLessons,
+      completedModules,
+      currentStreak,
+      totalXP,
+      completedChallenges: completedChallenges.length,
+      comebackBonusAvailable,
+    }
+    checkAchievements(stats)
+  }, [totalLessons, completedModules, currentStreak, totalXP, completedChallenges, comebackBonusAvailable, checkAchievements])
+
+  // Track daily goal completions for the achievement
+  useEffect(() => {
+    if (dailyGoalCompleted) {
+      incrementDailyGoalCount()
+    }
+  }, [dailyGoalCompleted, incrementDailyGoalCount])
+
+  return null
 }
 
 const tips = [

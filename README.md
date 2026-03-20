@@ -22,18 +22,18 @@ Get a free Groq API key at https://console.groq.com/keys
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start dev server |
-| `npm run build` | Production build |
-| `npm start` | Start production server |
-| `npm run lint` | ESLint check |
-| `npm test` | Run tests |
+| Command         | Description             |
+| --------------- | ----------------------- |
+| `npm run dev`   | Start dev server        |
+| `npm run build` | Production build        |
+| `npm start`     | Start production server |
+| `npm run lint`  | ESLint check            |
+| `npm test`      | Run tests               |
 
 ## Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
+| Variable       | Required              | Description                                         |
+| -------------- | --------------------- | --------------------------------------------------- |
 | `GROQ_API_KEY` | Yes (for AI features) | Groq API key — the rest of the app works without it |
 
 ## Deploy to Vercel (Recommended)

@@ -43,3 +43,5 @@ yarn-error.log*
 # build logs
 build-*.txt
 next-env.d.ts
+
+.vercel

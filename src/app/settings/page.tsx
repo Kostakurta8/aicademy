@@ -8,12 +8,14 @@ import { useThemeStore } from '@/stores/theme-store'
 import { useUserStore } from '@/stores/user-store'
 import { useAIStore } from '@/stores/ai-store'
 import { checkAIHealth } from '@/lib/ai/groq-client'
+import { useSubscriptionStore } from '@/stores/subscription-store'
+import Link from 'next/link'
 import {
   Moon, Sun, Eye, Monitor,
   User, Palette, Database, Cpu,
   Download, Upload, Trash2, Check,
   Wifi, WifiOff, RefreshCw,
-  Info, GraduationCap,
+  Info, GraduationCap, Crown,
 } from 'lucide-react'
 
 const themes = [
@@ -32,8 +34,6 @@ export default function SettingsPage() {
   const setName = useUserStore((s) => s.setName)
   const avatar = useUserStore((s) => s.avatar)
   const setAvatar = useUserStore((s) => s.setAvatar)
-  const groqApiKey = useUserStore((s) => s.groqApiKey)
-  const setGroqApiKey = useUserStore((s) => s.setGroqApiKey)
   const aiHealthy = useAIStore((s) => s.aiHealthy)
   const installedModels = useAIStore((s) => s.installedModels)
   const selectedModel = useAIStore((s) => s.selectedModel)
@@ -43,6 +43,7 @@ export default function SettingsPage() {
   const setSelectedTrack = useUserStore((s) => s.setSelectedTrack)
   const soundEnabled = useUserStore((s) => s.soundEnabled)
   const setSoundEnabled = useUserStore((s) => s.setSoundEnabled)
+  const plan = useSubscriptionStore((s) => s.plan)
 
   const [testingConnection, setTestingConnection] = useState(false)
   const [testResult, setTestResult] = useState<string | null>(null)
@@ -167,26 +168,18 @@ export default function SettingsPage() {
         </Card>
       </section>
 
-      {/* Groq AI */}
+      {/* AI Configuration */}
       <section className="mb-8">
-        <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2"><Cpu size={18} /> Groq AI Configuration</h2>
+        <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2"><Cpu size={18} /> AI Configuration</h2>
         <Card padding="md">
           <div className="space-y-4">
             <div className="flex items-center gap-3 mb-2">
               {aiHealthy ? (
-                <span className="flex items-center gap-2 text-sm text-green"><Wifi size={14} /> Connected</span>
+                <span className="flex items-center gap-2 text-sm text-green"><Wifi size={14} /> Connected to Groq AI</span>
               ) : (
-                <span className="flex items-center gap-2 text-sm text-red"><WifiOff size={14} /> Not configured</span>
+                <span className="flex items-center gap-2 text-sm text-text-muted"><WifiOff size={14} /> Checking connection...</span>
               )}
             </div>
-
-            <Input
-              label="Groq API Key"
-              type="password"
-              value={groqApiKey}
-              onChange={(e) => setGroqApiKey(e.target.value)}
-              placeholder="gsk_..."
-            />
 
             <div className="flex gap-2">
               <Button onClick={handleTestConnection} loading={testingConnection} icon={<RefreshCw size={14} />} variant="secondary" size="sm">
@@ -303,6 +296,28 @@ export default function SettingsPage() {
                 </Button>
               </div>
             </div>
+          </div>
+        </Card>
+      </section>
+
+      {/* Subscription */}
+      <section className="mb-8">
+        <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2"><Crown size={18} /> Subscription</h2>
+        <Card padding="md">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-text-primary">
+                {plan === 'pro' ? '✨ Pro Plan' : 'Free Plan'}
+              </p>
+              <p className="text-xs text-text-muted">
+                {plan === 'pro' ? 'Unlimited AI messages and exclusive features' : '10 AI messages per day'}
+              </p>
+            </div>
+            {plan !== 'pro' && (
+              <Link href="/pricing">
+                <Button size="sm" icon={<Crown size={14} />}>Upgrade to Pro</Button>
+              </Link>
+            )}
           </div>
         </Card>
       </section>
